@@ -1,0 +1,128 @@
+.results-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.candidates-list {
+  padding: 1.5rem;
+  min-height: 500px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.candidates-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.candidate-row {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.candidate-row:last-child {
+  border-bottom: none;
+}
+
+.candidate-index {
+  color: var(--text-tertiary);
+  margin-right: 0.5rem;
+  width: 1.5rem;
+}
+
+.candidate-deep-dive {
+  padding: 2rem;
+  min-height: 500px;
+}
+
+.deep-dive-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.candidate-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.candidate-avatar {
+  width: 48px;
+  height: 48px;
+  background-color: #E5E7EB;
+  border-radius: 50%;
+}
+
+.score-ring-container {
+  width: 80px;
+  height: 80px;
+}
+
+/* Pure CSS radial ring mimicking 89% fill of purple */
+.score-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent-color) 89%, #E5E7EB 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.score-ring::before {
+  content: "";
+  position: absolute;
+  inset: 6px; /* Width of the ring trace */
+  background-color: var(--surface-default);
+  border-radius: 50%;
+}
+
+.score-value {
+  position: relative;
+  z-index: 1;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.skill-badges-belt {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.badge-purple {
+  background-color: var(--accent-color);
+  color: var(--accent-text);
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.analysis-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.analysis-box {
+  min-height: 150px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: #FAFAFA;
+}

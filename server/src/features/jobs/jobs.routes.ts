@@ -1,18 +1,15 @@
-import { Router } from 'express'
-import { JobsController } from './jobs.controller'
-import { validate } from '../../middleware/validate'
-import { auth } from '../../middleware/auth'
-import { createJobDto, updateJobDto } from './jobs.dto'
+import { Router } from 'express';
+import { getJobs, createJob, getJobById } from './jobs.controller';
 
-const router = Router()
-const controller = new JobsController()
+const router = Router();
 
-router.use(auth)
+// GET /api/v1/jobs
+router.route('/')
+  .get(getJobs)
+  .post(createJob);
 
-router.get('/', controller.findAll)
-router.post('/', validate(createJobDto), controller.create)
-router.get('/:id', controller.findOne)
-router.patch('/:id', validate(updateJobDto), controller.update)
-router.delete('/:id', controller.remove)
+// GET /api/v1/jobs/:id
+router.route('/:id')
+  .get(getJobById);
 
-export default router
+export default router;

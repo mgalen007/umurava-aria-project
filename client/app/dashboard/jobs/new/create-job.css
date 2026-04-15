@@ -1,0 +1,170 @@
+<<<<<<< HEAD
+.create-job-card {
+  width: 100%;
+  max-width: 800px;
+  padding: 3rem;
+  border: none;
+}
+
+.create-job-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.input-row > label {
+  width: 150px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.form-input {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--accent-color);
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-toggle {
+  background-color: var(--surface-default);
+  border: 1px solid var(--border-subtle);
+  padding: 0.5rem 1.5rem;
+  border-radius: var(--radius-button);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle:hover {
+  background-color: var(--surface-hover);
+}
+
+.btn-toggle.active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.location-inputs {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 2rem;
+}
+
+/* Toggle Switch Basic CSS */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.toggle-switch .slider {
+  width: 36px;
+  height: 20px;
+  background-color: var(--accent-color);
+  border-radius: 20px;
+  position: relative;
+}
+
+.toggle-switch .slider::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 18px; /* Checked state */
+=======
+.bg-transparent {
+  background-color: transparent !important;
+  border-radius: 0;
+  margin-top: 0;
+  padding: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.create-job-form {
+  max-width: 800px;
+  margin-top: 1.5rem;
+}
+
+.form-section {
+  background-color: var(--surface-default);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.active-section {
+  border-color: #3b82f6; /* Blue active border from wireframe */
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.75rem;
+}
+
+.row-input {
+  flex-direction: row;
+  align-items: center;
+>>>>>>> main
+}
