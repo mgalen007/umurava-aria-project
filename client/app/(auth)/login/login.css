@@ -1,0 +1,59 @@
+.login-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  box-sizing: border-box;
+}
+
+.login-card {
+  flex: 0 0 50%;
+  background-color: var(--surface-default);
+  /* The wireframe has a rounded card but to keep it non-ai we use a solid architectural radius */
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl); 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card-content {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.forgot-password {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.login-branding {
+  flex: 0 0 50%;
+<<<<<<< HEAD
+  background-color: var(--surface-dark);
+=======
+  background-color: #d4d4d4;
+>>>>>>> main
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  display: flex;
+  padding: 4rem;
+}
+
+.branding-text {
+<<<<<<< HEAD
+  color: var(--text-inverse);
+=======
+  color: var(--text-primary);
+>>>>>>> main
+}
