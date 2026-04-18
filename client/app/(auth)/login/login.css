@@ -10,7 +10,8 @@
 .login-card {
   flex: 0 0 50.5%;
   background: #f7f7fb;
-  border-radius: 28px;
+  border-radius: 15px;
+  max-width: 43em;
   display: flex;
   align-items: center;
   justify-content: center;
