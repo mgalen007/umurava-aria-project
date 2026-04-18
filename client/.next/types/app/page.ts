@@ -1,4 +1,4 @@
-// File: C:\Users\HP\OneDrive\Documents\projects\Aria\client\app\page.tsx
+// File: C:\Users\HP\OneDrive\Desktop\umurava-aria-project\client\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -28,12 +28,11 @@
   position: relative;
 }
 
-/* Mobile Sidebar & Hamburger */
 .mobile-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 40;
 }
 
@@ -49,7 +48,6 @@
   border-radius: 50%;
   box-shadow: var(--shadow-md);
   border: none;
-  border-radius: 50%;
 }
 
 @media (max-width: 768px) {
@@ -61,58 +59,58 @@
     z-index: 50;
     transform: translateX(-100%);
   }
+
   .sidebar.open {
     transform: translateX(0);
   }
+
   .mobile-overlay.open {
     display: block;
   }
+
   .hamburger-btn {
     display: flex;
     align-items: center;
     justify-content: center;
   }
+
   .main-content {
     padding: 1rem;
   }
 }
 
-/* Sidebar Profiles */
-.org-profile, .admin-profile {
+.org-profile,
+.admin-profile {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  background-color: var(--surface-hover);
+  background-color: rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-md);
   margin-bottom: 2rem;
 }
 
-.org-avatar, .admin-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--border-strong);
-}
-
-.org-info, .admin-info {
+.org-info,
+.admin-info {
   display: flex;
   flex-direction: column;
 }
 
-.org-name, .admin-name {
+.org-name,
+.admin-name {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-inverse);
 }
 
-.org-subtitle, .admin-email {
+.org-subtitle,
+.admin-email {
   font-size: 0.625rem;
   color: var(--text-tertiary);
 }
 
-/* Navigation */
-.sidebar-nav {
+.sidebar-nav,
+.sidebar-footer-nav {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -140,9 +138,6 @@
 }
 
 .sidebar-footer-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
   margin-top: 1rem;
 }
 

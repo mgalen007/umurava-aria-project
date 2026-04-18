@@ -16,9 +16,9 @@
   padding: 1.5rem;
   border-radius: var(--radius-md);
   margin-top: -2rem;
-  margin-left: -2rem;
   margin-right: -2rem;
   margin-bottom: 0.5rem;
+  margin-left: -2rem;
 }
 
 .page-header h1 {
@@ -52,7 +52,6 @@
   width: 100%;
 }
 
-/* Table */
 .table-container {
   background-color: var(--surface-default);
   border-radius: var(--radius-lg);
@@ -100,7 +99,6 @@
   font-size: 0.75rem;
 }
 
-/* Charts */
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

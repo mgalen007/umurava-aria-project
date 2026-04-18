@@ -1,6 +1,6 @@
 import React from 'react';
-import './jobs.css';
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
+import './jobs.css';
 
 export default function JobsPage() {
   const jobs = Array(6).fill({
@@ -11,7 +11,7 @@ export default function JobsPage() {
     workType: 'Remote',
     location: 'Kigali',
     candidatesCount: 42,
-    lastScreened: '2 days ago'
+    lastScreened: '2 days ago',
   });
 
   return (
@@ -21,51 +21,42 @@ export default function JobsPage() {
       </header>
 
       <div className="jobs-actions">
-<<<<<<< HEAD
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" type="button">
             Sort by Name <ArrowDown size={14} />
           </button>
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" type="button">
             Sort by Status <ArrowDown size={14} />
           </button>
         </div>
-        <button className="btn btn-secondary create-job-btn">
-=======
-        <button className="btn btn-secondary">
-          Sort by Status <ArrowDown size={14} />
-        </button>
-        <button className="btn btn-primary create-job-btn">
->>>>>>> main
+        <button className="btn btn-secondary create-job-btn" type="button">
           Create new job
         </button>
       </div>
 
       <div className="jobs-grid">
-        {jobs.map((job, idx) => (
-          <div className="job-card surface" key={idx}>
+        {jobs.map((job, index) => (
+          <div className="job-card surface" key={job.title + index}>
             <div className="job-card-header">
               <h3 className="job-title">
-                Javascript <br/>
+                Javascript <br />
                 Senior developer
               </h3>
-<<<<<<< HEAD
-              <span className={idx === 2 || idx === 4 ? "status-badge-draft" : "status-badge-active"}>
-                 {idx === 2 || idx === 4 ? "Draft" : "Active"}
+              <span className={index === 2 || index === 4 ? 'status-badge-draft' : 'status-badge-active'}>
+                {index === 2 || index === 4 ? 'Draft' : 'Active'}
               </span>
-=======
-              <span className="status-badge-solid">{job.status}</span>
->>>>>>> main
             </div>
 
             <div className="job-meta">
-              <span>{job.skills} &bull; {job.level} &bull; {job.workType} &bull; {job.location}</span>
+              <span>
+                {job.skills} &bull; {job.level} &bull; {job.workType} &bull; {job.location}
+              </span>
             </div>
 
             <div className="job-footer">
               <span className="badge-outline">{job.candidatesCount} candidates</span>
               <span className="screened-time">Last screened {job.lastScreened}</span>
-              <button className="btn btn-ghost link-btn">
+              <button className="btn btn-ghost link-btn" type="button">
                 View job <ArrowUpRight size={14} />
               </button>
             </div>
