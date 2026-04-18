@@ -11,6 +11,18 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata = {
   title: 'ARIA | Recruitment Intelligence Analyst',
   description: 'AI Recruitment Intelligence Analyst',
+  icons: {
+    icon: [
+      {
+        url: '/image/logo-black.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/image/logo-white.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
