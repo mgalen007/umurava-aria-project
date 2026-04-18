@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
 :root {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
   --bg-color: #f4f5f7;
   --surface-default: #ffffff;
   --surface-hover: #f0f0f0;
@@ -42,11 +41,12 @@ body {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg-color);
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {

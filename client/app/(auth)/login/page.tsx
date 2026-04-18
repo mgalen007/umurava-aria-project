@@ -1,5 +1,7 @@
 import React from 'react';
 import './login.css';
+import Image from "next/image";
+
 
 export default function LoginPage() {
   return (
@@ -7,42 +9,71 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="login-card-content">
           <div className="login-header">
-            <h1 className="text-h1" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>LOGIN</h1>
-            <p className="text-body-sm">Login with your account to access the service</p>
+            <h1 className="login-title">Welcome back</h1>
+            <p className="login-subtitle">
+              Sign in to your workspace
+            </p>
           </div>
 
           <form className="login-form">
             <div className="input-group">
-              <label className="input-label">Username</label>
-              <input type="text" className="input-field" placeholder="" />
+              <label className="login-label" htmlFor="username">
+                Username
+              </label>
+              <input id="username" type="text" className="login-input" placeholder="Enter your username" />
             </div>
 
-            <div className="input-group" style={{ marginBottom: '0.5rem' }}>
-              <label className="input-label">Password</label>
-              <input type="password" className="input-field" placeholder="" />
+            <div className="input-group login-input-group login-input-group-tight">
+              <label className="login-label" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                className="login-input"
+                placeholder="Enter your password"
+              />
             </div>
-            
+
             <div className="forgot-password">
-              <a href="#" className="text-body-sm">Forgot password?</a>
+              <a href="#" className="login-link">
+                Forgot password?
+              </a>
             </div>
 
-            <button type="button" className="btn btn-ghost w-full" style={{ marginTop: '1rem', backgroundColor: '#e5e5e5' }}>
+            <button type="button" className="login-button login-button-primary">
               Login
             </button>
 
-            <div className="divider">
-              <span className="text-body-sm">OR</span>
+            <div className="login-divider">
+              <span>OR</span>
             </div>
 
-            <button type="button" className="btn btn-ghost w-full" style={{ backgroundColor: '#e5e5e5' }}>
-              Login with Google
+            <button type="button" className="login-button login-button-secondary">
+              <span>Login with Google</span>
+              <Image
+                src="/image/google-icon.png"
+                alt="Google Icon"
+                width={20}
+                height={20}
+                className="google-icon"
+              />
             </button>
           </form>
         </div>
       </div>
-      
+
       <div className="login-branding">
-        <h2 className="text-h2 branding-text">Umurava Screening System</h2>
+        <div className="brand-shell">
+          <Image
+            src="/image/logo-white.png"
+            alt="Company Logo"
+            width={60}
+            height={60}
+            className="brand-logo"
+          />  
+          <div className="brand-wordmark">ARIA</div>        
+        </div>
       </div>
     </div>
   );
