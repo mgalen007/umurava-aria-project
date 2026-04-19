@@ -23,22 +23,23 @@ export default function JobApplicantsPage() {
     <div className="page-container applicants-page">
       <header className="job-detail-header">
         <h1 className="text-h1">Job / Javascript Senior developer</h1>
-        <button className="btn btn-secondary">Edit job</button>
+        <button className="btn btn-secondary" type="button">
+          Edit job
+        </button>
       </header>
 
       <div className="applicants-layout">
-        {/* Main Applicants Area */}
         <div className="applicants-main surface">
           <div className="applicants-actions">
             <input type="text" className="input-field search-input-large" placeholder="Search" />
-<<<<<<< HEAD
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-primary">Upload files</button>
-              <button className="btn btn-primary">View job</button>
+              <button className="btn btn-primary" type="button">
+                Upload files
+              </button>
+              <button className="btn btn-primary" type="button">
+                View job
+              </button>
             </div>
-=======
-            <button className="btn btn-secondary">Upload files</button>
->>>>>>> main
           </div>
 
           <h2 className="text-h2 applicants-title">Job applicants</h2>
@@ -47,64 +48,57 @@ export default function JobApplicantsPage() {
             <table className="jobs-table">
               <thead>
                 <tr>
-                  <th style={{ width: '40px' }}><input type="checkbox" /></th>
+                  <th style={{ width: '40px' }}>
+                    <input type="checkbox" />
+                  </th>
                   <th>Name</th>
                   <th>Experience</th>
                   <th>Location</th>
                 </tr>
               </thead>
               <tbody>
-                {applicants.map((app, idx) => (
-                  <tr key={idx}>
-                    <td><input type="checkbox" /></td>
-                    <td className="font-medium">{app.name}</td>
-                    <td>{app.exp}</td>
-                    <td>{app.loc}</td>
+                {applicants.map((applicant) => (
+                  <tr key={applicant.name}>
+                    <td>
+                      <input type="checkbox" />
+                    </td>
+                    <td className="font-medium">{applicant.name}</td>
+                    <td>{applicant.exp}</td>
+                    <td>{applicant.loc}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-<<<<<<< HEAD
-          <button className="btn btn-primary screen-btn w-full">
-=======
-          <button className="btn btn-secondary screen-btn w-full">
->>>>>>> main
+          <button className="btn btn-primary screen-btn w-full" type="button">
             Screen candidates
           </button>
         </div>
 
-        {/* Sidebar Sessions Area */}
         <aside className="sessions-sidebar surface">
           <h3 className="sessions-title">Previous sessions</h3>
-          
+
           <div className="sessions-list">
-            {sessions.map((session, idx) => (
-              <div className="session-card" key={idx}>
+            {sessions.map((session, index) => (
+              <div className="session-card" key={session.date + index}>
                 <div className="session-header">
                   <span className="session-date">{session.date}</span>
-<<<<<<< HEAD
-                  <span className={session.status === 'Pending' ? 'status-badge-draft' : 'status-badge-active'}>
-=======
-                  <span className={`status-badge-solid status-${session.status.toLowerCase()}`}>
->>>>>>> main
+                  <span
+                    className={
+                      session.status === 'Pending' ? 'status-badge-draft' : 'status-badge-active'
+                    }
+                  >
                     {session.status}
                   </span>
                 </div>
                 <div className="session-stats">
-                  <div className="stat-row">
-                    <span className="icon">👥</span> {session.candidates} Candidates
-                  </div>
-                  <div className="stat-row">
-                    <span className="icon">⭐</span> Top score: {session.score}
-                  </div>
+                  <div className="stat-row">Candidates: {session.candidates}</div>
+                  <div className="stat-row">Top score: {session.score}</div>
                 </div>
-<<<<<<< HEAD
-                <button className="btn btn-primary w-full" style={{ marginTop: '1rem' }}>View results</button>
-=======
-                <button className="btn btn-secondary w-full">View results</button>
->>>>>>> main
+                <button className="btn btn-primary w-full" type="button" style={{ marginTop: '1rem' }}>
+                  View results
+                </button>
               </div>
             ))}
           </div>
