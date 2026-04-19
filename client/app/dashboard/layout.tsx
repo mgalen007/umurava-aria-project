@@ -69,24 +69,7 @@ export default function DashboardLayout({
             style={{ backgroundColor: 'transparent', padding: 0, marginBottom: '2rem' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  backgroundColor: 'var(--accent-color)',
-                  borderRadius: '8px',
-                }}
-              />
-              <span
-                style={{
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '1.25rem',
-                  letterSpacing: '1px',
-                }}
-              >
-                ARIA
-              </span>
+              <img src="/image/logo-white.png" alt="ARIA Logo" style={{ height: '32px' }} />
             </div>
           </div>
 
