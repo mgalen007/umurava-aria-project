@@ -1,27 +1,3 @@
-.page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  height: 100%;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--border-strong);
-  padding: 1.5rem;
-  border-radius: var(--radius-md);
-  margin-top: -2rem;
-  margin-right: -2rem;
-  margin-bottom: 0.5rem;
-  margin-left: -2rem;
-}
-
-.page-header h1 {
-  font-size: 1.125rem;
-}
-
 .header-actions {
   display: flex;
   gap: 1rem;

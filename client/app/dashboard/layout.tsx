@@ -84,14 +84,14 @@ export default function DashboardLayout({
       <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-top">
           <div
-            className="org-profile"
+            className="org-profile org-profile-toggle"
             onClick={toggleCollapse}
             style={{ backgroundColor: 'transparent', padding: 0, marginBottom: '2rem', cursor: 'pointer' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden', height: '32px' }}>
-               <div style={{ position: 'relative', width: isCollapsed ? '32px' : '120px', height: '32px', flexShrink: 0, transition: 'width 0.3s' }}>
-                 <img src="/image/logo-white.png" alt="ARIA Logo" style={{ height: '32px', position: 'absolute', left: 0 }} />
-               </div>
+            <div className="org-profile-brand">
+              <div className="logo-slot">
+                <img src="/image/logo-white.png" alt="ARIA Logo" className="logo-slot-img" />
+              </div>
             </div>
           </div>
 

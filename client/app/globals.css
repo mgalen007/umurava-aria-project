@@ -1,6 +1,8 @@
 :root {
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --bg-color: #f4f5f7;
+  /* Area behind the inset dashboard content panel (sidebar stays on surface-dark) */
+  --dashboard-shell-bg: #1f222a;
   --surface-default: #ffffff;
   --surface-hover: #f0f0f0;
   --surface-active: #e5e7eb;
