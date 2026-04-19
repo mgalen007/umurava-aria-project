@@ -61,7 +61,7 @@
 .candidate-avatar {
   width: 48px;
   height: 48px;
-  background-color: #E5E7EB;
+  background-color: #e5e7eb;
   border-radius: 50%;
 }
 
@@ -70,12 +70,10 @@
   height: 80px;
 }
 
-/* Pure CSS radial ring mimicking 89% fill of purple */
 .score-ring {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: conic-gradient(var(--accent-color) 89%, #E5E7EB 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,9 +81,9 @@
 }
 
 .score-ring::before {
-  content: "";
+  content: '';
   position: absolute;
-  inset: 6px; /* Width of the ring trace */
+  inset: 6px;
   background-color: var(--surface-default);
   border-radius: 50%;
 }
@@ -124,5 +122,5 @@
   min-height: 150px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  background-color: #FAFAFA;
+  background-color: #fafafa;
 }

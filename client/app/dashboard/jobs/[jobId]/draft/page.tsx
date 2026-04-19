@@ -1,52 +1,90 @@
 import React from 'react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { getDraftJob, getJobOpening } from '@/lib/mock-data';
+import type { MockDraftJob } from '@/lib/mock-data';
 import './draft.css';
 
-export default function JobDraftPage() {
+function draftFallback(jobId: string): MockDraftJob | null {
+  const opening = getJobOpening(jobId);
+  if (!opening) return null;
+  return {
+    jobId: opening.id,
+    titleLine1: opening.titleLine1,
+    titleLine2: opening.titleLine2,
+    skills: ['Add skills in editor'],
+    experience: '—',
+    seniority: opening.level,
+    location: opening.location,
+    employmentType: opening.workType,
+    disqualifiers: [],
+  };
+}
+
+export default function JobDraftPage({ params }: { params: { jobId: string } }) {
+  const draft = getDraftJob(params.jobId) ?? draftFallback(params.jobId);
+  if (!draft) {
+    notFound();
+  }
+
   return (
     <div className="page-container draft-container">
       <div className="draft-card surface">
-        
-        {/* Header Section */}
         <div className="draft-header">
           <h1 className="text-h1 job-title-large">
-            Javascript Senior<br/>
-            developer
+            {draft.titleLine1}
+            <br />
+            {draft.titleLine2}
           </h1>
-          <button className="btn btn-ghost edit-btn">Edit</button>
+          <Link href={`/dashboard/jobs/${params.jobId}`} className="btn btn-ghost edit-btn" style={{ textDecoration: 'none' }}>
+            Back to job
+          </Link>
         </div>
 
-        {/* Skills Section */}
         <div className="draft-section">
           <h3 className="section-heading">Skills required</h3>
           <div className="badges-list">
-            <span className="badge-gray">Javascript</span>
-            <span className="badge-gray">Typescript</span>
-            <span className="badge-gray">React.js</span>
+            {draft.skills.map((skill) => (
+              <span key={skill} className="badge-gray">
+                {skill}
+              </span>
+            ))}
           </div>
         </div>
 
         <hr className="divider-line" />
 
-        {/* Details Section */}
         <div className="draft-section details-list">
-          <p><strong>Experience:</strong> 5+ Years</p>
-          <p><strong>Seniority:</strong> Senior level</p>
-          <p><strong>Location:</strong> New York city</p>
-          <p><strong>Type:</strong> Full time</p>
+          <p>
+            <strong>Experience:</strong> {draft.experience}
+          </p>
+          <p>
+            <strong>Seniority:</strong> {draft.seniority}
+          </p>
+          <p>
+            <strong>Location:</strong> {draft.location}
+          </p>
+          <p>
+            <strong>Type:</strong> {draft.employmentType}
+          </p>
         </div>
 
         <hr className="divider-line" />
 
-        {/* Disqualifies Section */}
         <div className="draft-section">
           <h3 className="section-heading">Disqualifies</h3>
           <div className="badges-list">
-            <span className="badge-gray">No remote</span>
-            <span className="badge-gray">No visa sponsorship</span>
-            <span className="badge-gray">No freelancers</span>
+            {draft.disqualifiers.length === 0 ? (
+              <span className="badge-gray">None listed</span>
+            ) : (
+              draft.disqualifiers.map((d) => (
+                <span key={d} className="badge-gray">
+                  {d}
+                </span>
+              ))
+            )}
           </div>
         </div>
-
       </div>
     </div>
   );

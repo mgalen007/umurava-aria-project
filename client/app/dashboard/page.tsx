@@ -1,16 +1,10 @@
 import React from 'react';
+import Link from 'next/link';
 import { Search } from 'lucide-react';
+import { mockApplicationTrend, mockDashboardJobRows, mockShortlistBars } from '@/lib/mock-data';
 import './dashboard-page.css';
 
 export default function DashboardPage() {
-  const jobs = [
-    { role: 'Senior Node.js developer', dept: '', status: 'Active' },
-    { role: 'Product Designer', dept: '', status: 'Drafted' },
-    { role: 'Engineer developer', dept: '', status: 'Archived' },
-    { role: 'Junior Data Analyst', dept: '', status: 'Active' },
-    { role: 'Product Developer', dept: '', status: 'Archived' },
-  ];
-
   return (
     <div className="page-container">
       <header className="page-header">
@@ -20,9 +14,9 @@ export default function DashboardPage() {
             <Search size={16} className="search-icon" />
             <input type="text" placeholder="Search" className="search-input" />
           </div>
-          <button className="btn btn-primary create-job-btn" type="button">
+          <Link href="/dashboard/jobs/new" className="btn btn-primary create-job-btn" style={{ textDecoration: 'none' }}>
             Create new job
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -38,18 +32,24 @@ export default function DashboardPage() {
             </tr>
           </thead>
           <tbody>
-            {jobs.map((job, index) => (
-              <tr key={job.role + index}>
-                <td className="font-medium">{job.role}</td>
+            {mockDashboardJobRows.map((job) => (
+              <tr key={job.id}>
+                <td className="font-medium">
+                  <Link href={`/dashboard/jobs/${job.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    {job.role}
+                  </Link>
+                </td>
                 <td>{job.dept}</td>
                 <td>
-                  <span className={`status-badge status-${job.status.toLowerCase()}`}>
-                    {job.status}
-                  </span>
+                  <span className={`status-badge status-${job.status.toLowerCase()}`}>{job.status}</span>
                 </td>
-                <td />
+                <td>{job.matchScoreAvg != null ? `${job.matchScoreAvg}%` : '—'}</td>
                 <td>
-                  <div className="placeholder-circle" />
+                  {job.highMatchedCandidate ? (
+                    <span>{job.highMatchedCandidate}</span>
+                  ) : (
+                    <div className="placeholder-circle" />
+                  )}
                 </td>
               </tr>
             ))}
@@ -64,7 +64,13 @@ export default function DashboardPage() {
           <div className="chart-placeholder line-chart-placeholder">
             <svg width="100%" height="150" viewBox="0 0 300 100" preserveAspectRatio="none">
               <path
-                d="M 10 90 Q 40 90, 60 70 T 120 70 T 160 30 T 220 50 T 290 10"
+                d={`M 10 90 ${mockApplicationTrend
+                  .map((v, i) => {
+                    const x = 10 + (i * 280) / Math.max(mockApplicationTrend.length - 1, 1);
+                    const y = 100 - (v / 35) * 80;
+                    return `L ${x} ${y}`;
+                  })
+                  .join(' ')}`}
                 fill="none"
                 stroke="var(--accent-color)"
                 strokeWidth="3"
@@ -76,8 +82,8 @@ export default function DashboardPage() {
         <div className="chart-card">
           <h3 className="chart-title">Shortlist Conversation</h3>
           <div className="chart-placeholder bar-chart-placeholder">
-            {[60, 40, 30, 50, 40, 30, 45, 30].map((height, index) => (
-              <div key={height + index} className="bar" style={{ height: `${height}%` }} />
+            {mockShortlistBars.map((height, index) => (
+              <div key={index} className="bar" style={{ height: `${height}%` }} />
             ))}
           </div>
         </div>

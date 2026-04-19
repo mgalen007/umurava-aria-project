@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { mockScreeningMetrics, mockScreeningTableRows } from '@/lib/mock-data';
 import './screenings.css';
 
 export default function ScreeningsPage() {
@@ -7,36 +8,24 @@ export default function ScreeningsPage() {
     <div className="page-container">
       <div className="flex-row justify-between" style={{ marginBottom: '2rem' }}>
         <h1 className="text-h1">Screenings</h1>
-        <div className="header-actions">
-           {/* Empty spacer or notification bell area could go here */}
-        </div>
+        <div className="header-actions" />
       </div>
 
-      {/* Top Metrics Row */}
       <div className="metrics-grid">
-        <div className="metric-card surface">
-          <h2>14</h2>
-          <p>Total sessions run</p>
-        </div>
-        <div className="metric-card surface">
-          <h2>235</h2>
-          <p>Candidates screened</p>
-        </div>
-        <div className="metric-card surface">
-          <h2>86%</h2>
-          <p>Avg top score</p>
-        </div>
-        <div className="metric-card surface">
-          <h2>5</h2>
-          <p>Sessions with overrides</p>
-        </div>
+        {mockScreeningMetrics.map((m) => (
+          <div className="metric-card surface" key={m.label}>
+            <h2>{m.value}</h2>
+            <p>{m.label}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Table Section */}
       <div className="table-container" style={{ marginTop: '2rem' }}>
         <div className="table-controls flex-row justify-between" style={{ padding: '1rem' }}>
           <input type="text" placeholder="Search..." className="input-field" style={{ width: '300px' }} />
-          <button className="btn btn-secondary">Filter</button>
+          <button type="button" className="btn btn-secondary">
+            Filter
+          </button>
         </div>
 
         <table className="jobs-table">
@@ -52,42 +41,49 @@ export default function ScreeningsPage() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong>#14</strong> Javascript senior developer</td>
-              <td>April 18, 2026</td>
-              <td>25</td>
-              <td><span className="badge-score green">82%</span></td>
-              <td>0</td>
-              <td><span className="badge badge-completed">Completed</span></td>
-              <td><Link href="/dashboard/screenings/14"><button className="btn btn-primary">View results</button></Link></td>
-            </tr>
-            <tr>
-              <td><strong>#12</strong> Javascript senior developer</td>
-              <td>April 18, 2026</td>
-              <td>25</td>
-              <td><span className="badge-score green">89%</span></td>
-              <td><span className="badge-override red">2</span></td>
-              <td><span className="badge badge-completed">Completed</span></td>
-              <td><Link href="/dashboard/screenings/12"><button className="btn btn-primary">View results</button></Link></td>
-            </tr>
-            <tr>
-              <td><strong>#1</strong> Product engineer</td>
-              <td>April 17, 2026</td>
-              <td>25</td>
-              <td><span className="badge-score blue">0%</span></td>
-              <td>0</td>
-              <td><span className="badge badge-running">Running</span></td>
-              <td><button className="btn btn-secondary">Cancel</button></td>
-            </tr>
-            <tr>
-              <td><strong>#14</strong> Javascript senior developer</td>
-              <td>April 16, 2026</td>
-              <td>25</td>
-              <td><span className="badge-score orange">65%</span></td>
-              <td>0</td>
-              <td><span className="badge badge-completed">Completed</span></td>
-              <td><Link href="/dashboard/screenings/14"><button className="btn btn-primary">View results</button></Link></td>
-            </tr>
+            {mockScreeningTableRows.map((row) => (
+              <tr key={`${row.jobId}-${row.sessionId}-${row.dateRun}`}>
+                <td>
+                  <strong>{row.sessionLabel}</strong> {row.jobTitle}
+                </td>
+                <td>{row.dateRun}</td>
+                <td>{row.candidates}</td>
+                <td>
+                  <span className={`badge-score ${row.topScoreClass}`}>{row.topScore}%</span>
+                </td>
+                <td>
+                  {row.overrides > 0 ? <span className="badge-override red">{row.overrides}</span> : row.overrides}
+                </td>
+                <td>
+                  <span
+                    className={
+                      row.status === 'Completed'
+                        ? 'badge badge-completed'
+                        : row.status === 'Running'
+                          ? 'badge badge-running'
+                          : 'badge badge-completed'
+                    }
+                  >
+                    {row.status}
+                  </span>
+                </td>
+                <td>
+                  {row.status === 'Running' ? (
+                    <button type="button" className="btn btn-secondary">
+                      Cancel
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/dashboard/jobs/${row.jobId}/session/${row.sessionId}`}
+                      className="btn btn-primary"
+                      style={{ textDecoration: 'none', display: 'inline-block' }}
+                    >
+                      View results
+                    </Link>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

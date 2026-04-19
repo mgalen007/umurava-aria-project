@@ -1,0 +1,502 @@
+/**
+ * In-memory mock data for the client UI (acts as a stand-in database).
+ */
+
+export type JobListStatus = 'Active' | 'Drafted' | 'Archived';
+
+export interface DashboardJobRow {
+  id: string;
+  role: string;
+  dept: string;
+  status: JobListStatus;
+  matchScoreAvg: number | null;
+  highMatchedCandidate: string | null;
+}
+
+export interface JobOpening {
+  id: string;
+  titleLine1: string;
+  titleLine2: string;
+  status: 'Active' | 'Draft';
+  skillsSummary: string;
+  level: string;
+  workType: string;
+  location: string;
+  candidatesCount: number;
+  lastScreened: string;
+}
+
+export interface JobApplicant {
+  id: string;
+  name: string;
+  exp: string;
+  loc: string;
+}
+
+export interface JobSessionSummary {
+  id: string;
+  date: string;
+  status: 'Pending' | 'Completed';
+  candidates: number;
+  score: string;
+}
+
+export interface JobDetail {
+  id: string;
+  title: string;
+  applicants: JobApplicant[];
+  sessions: JobSessionSummary[];
+}
+
+export interface ScreeningMetric {
+  label: string;
+  value: string;
+}
+
+export interface ScreeningTableRow {
+  sessionId: string;
+  jobId: string;
+  sessionLabel: string;
+  jobTitle: string;
+  dateRun: string;
+  candidates: number;
+  topScore: number;
+  topScoreClass: 'green' | 'blue' | 'orange';
+  overrides: number;
+  status: 'Completed' | 'Running' | 'Pending';
+}
+
+export interface SessionTopCandidate {
+  id: string;
+  name: string;
+  scorePercent: number;
+}
+
+export interface SessionResults {
+  jobId: string;
+  sessionId: string;
+  jobTitle: string;
+  summaryLine: string;
+  topCandidates: SessionTopCandidate[];
+  featured: {
+    name: string;
+    title: string;
+    location: string;
+    scorePercent: number;
+    skillBadges: string[];
+  };
+}
+
+export interface MockCandidate {
+  id: string;
+  name: string;
+  email: string;
+  headline: string;
+  location: string;
+  matchScore: number;
+  summary: string;
+  skills: string[];
+}
+
+export interface MockDraftJob {
+  jobId: string;
+  titleLine1: string;
+  titleLine2: string;
+  skills: string[];
+  experience: string;
+  seniority: string;
+  location: string;
+  employmentType: string;
+  disqualifiers: string[];
+}
+
+export const mockCurrentUser = {
+  name: 'Admin',
+  email: 'admin@gmail.com',
+};
+
+export const mockDashboardJobRows: DashboardJobRow[] = [
+  {
+    id: 'js-senior',
+    role: 'Senior Node.js developer',
+    dept: 'Engineering',
+    status: 'Active',
+    matchScoreAvg: 81,
+    highMatchedCandidate: 'Alice Johnson',
+  },
+  {
+    id: 'designer-1',
+    role: 'Product Designer',
+    dept: 'Product',
+    status: 'Drafted',
+    matchScoreAvg: null,
+    highMatchedCandidate: null,
+  },
+  {
+    id: 'eng-2',
+    role: 'Engineer developer',
+    dept: 'Engineering',
+    status: 'Archived',
+    matchScoreAvg: 74,
+    highMatchedCandidate: 'Mark Robert',
+  },
+  {
+    id: 'analyst-1',
+    role: 'Junior Data Analyst',
+    dept: 'Data',
+    status: 'Active',
+    matchScoreAvg: 68,
+    highMatchedCandidate: 'John David',
+  },
+  {
+    id: 'dev-product',
+    role: 'Product Developer',
+    dept: 'Product',
+    status: 'Archived',
+    matchScoreAvg: 71,
+    highMatchedCandidate: 'Peter Griffin',
+  },
+];
+
+export const mockApplicationTrend = [12, 18, 9, 22, 15, 30, 24];
+
+export const mockShortlistBars = [60, 40, 30, 50, 40, 30, 45, 30];
+
+export const mockJobOpenings: JobOpening[] = [
+  {
+    id: 'js-senior',
+    titleLine1: 'Javascript',
+    titleLine2: 'Senior developer',
+    status: 'Active',
+    skillsSummary: '3 skills',
+    level: 'Mid-level',
+    workType: 'Remote',
+    location: 'Kigali',
+    candidatesCount: 42,
+    lastScreened: '2 days ago',
+  },
+  {
+    id: 'designer-1',
+    titleLine1: 'Product',
+    titleLine2: 'Designer',
+    status: 'Active',
+    skillsSummary: '5 skills',
+    level: 'Senior',
+    workType: 'Hybrid',
+    location: 'Kigali',
+    candidatesCount: 18,
+    lastScreened: '5 days ago',
+  },
+  {
+    id: 'eng-2',
+    titleLine1: 'Platform',
+    titleLine2: 'Engineer',
+    status: 'Draft',
+    skillsSummary: '4 skills',
+    level: 'Mid-level',
+    workType: 'On-site',
+    location: 'Nairobi',
+    candidatesCount: 0,
+    lastScreened: '—',
+  },
+  {
+    id: 'analyst-1',
+    titleLine1: 'Junior Data',
+    titleLine2: 'Analyst',
+    status: 'Active',
+    skillsSummary: '2 skills',
+    level: 'Junior',
+    workType: 'Remote',
+    location: 'Lagos',
+    candidatesCount: 31,
+    lastScreened: '1 day ago',
+  },
+  {
+    id: 'dev-product',
+    titleLine1: 'Product',
+    titleLine2: 'Developer',
+    status: 'Active',
+    skillsSummary: '6 skills',
+    level: 'Senior',
+    workType: 'Remote',
+    location: 'London',
+    candidatesCount: 55,
+    lastScreened: '3 days ago',
+  },
+  {
+    id: 'mobile-1',
+    titleLine1: 'Mobile',
+    titleLine2: 'Engineer',
+    status: 'Draft',
+    skillsSummary: '4 skills',
+    level: 'Mid-level',
+    workType: 'Remote',
+    location: 'Kigali',
+    candidatesCount: 0,
+    lastScreened: '—',
+  },
+];
+
+const applicantsJsSenior: JobApplicant[] = [
+  { id: 'c1', name: 'Alice Johnson', exp: 'Javascript', loc: 'Nyanza' },
+  { id: 'c2', name: 'John David', exp: 'Javascript', loc: 'Huye' },
+  { id: 'c3', name: 'Mark Robert', exp: 'Javascript', loc: 'Karongi' },
+  { id: 'c4', name: 'Peter Griffin', exp: 'Javascript', loc: 'Kigali' },
+  { id: 'c5', name: 'Peter Parker', exp: 'Javascript', loc: 'London' },
+  { id: 'c6', name: 'Bruce Wayne', exp: 'Javascript', loc: 'California' },
+  { id: 'c7', name: 'Dwayne Johnson', exp: 'Javascript', loc: 'USA' },
+  { id: 'c8', name: 'Mr Beast', exp: 'Javascript', loc: 'USA' },
+];
+
+const sessionsJsSenior: JobSessionSummary[] = [
+  { id: 's1', date: 'Apr 12, 2023', status: 'Pending', candidates: 25, score: '92%' },
+  { id: 's2', date: 'Apr 12, 2023', status: 'Completed', candidates: 25, score: '92%' },
+  { id: 's3', date: 'Apr 10, 2023', status: 'Completed', candidates: 18, score: '88%' },
+];
+
+export const mockJobDetails: Record<string, JobDetail> = {
+  'js-senior': {
+    id: 'js-senior',
+    title: 'Javascript Senior developer',
+    applicants: applicantsJsSenior,
+    sessions: sessionsJsSenior,
+  },
+  'designer-1': {
+    id: 'designer-1',
+    title: 'Product Designer',
+    applicants: applicantsJsSenior.slice(0, 4),
+    sessions: [{ id: 's4', date: 'Mar 2, 2024', status: 'Completed', candidates: 12, score: '79%' }],
+  },
+  'analyst-1': {
+    id: 'analyst-1',
+    title: 'Junior Data Analyst',
+    applicants: applicantsJsSenior.slice(2, 6),
+    sessions: [],
+  },
+  'dev-product': {
+    id: 'dev-product',
+    title: 'Product Developer',
+    applicants: applicantsJsSenior,
+    sessions: [{ id: 's-run', date: 'Apr 17, 2026', status: 'Pending', candidates: 25, score: '—' }],
+  },
+  'eng-2': {
+    id: 'eng-2',
+    title: 'Platform Engineer',
+    applicants: [],
+    sessions: [],
+  },
+  'mobile-1': {
+    id: 'mobile-1',
+    title: 'Mobile Engineer',
+    applicants: [],
+    sessions: [],
+  },
+};
+
+export const mockScreeningMetrics: ScreeningMetric[] = [
+  { label: 'Total sessions run', value: '14' },
+  { label: 'Candidates screened', value: '235' },
+  { label: 'Avg top score', value: '86%' },
+  { label: 'Sessions with overrides', value: '5' },
+];
+
+export const mockScreeningTableRows: ScreeningTableRow[] = [
+  {
+    sessionId: 's1',
+    jobId: 'js-senior',
+    sessionLabel: '#14',
+    jobTitle: 'Javascript senior developer',
+    dateRun: 'April 18, 2026',
+    candidates: 25,
+    topScore: 82,
+    topScoreClass: 'green',
+    overrides: 0,
+    status: 'Completed',
+  },
+  {
+    sessionId: 's2',
+    jobId: 'js-senior',
+    sessionLabel: '#12',
+    jobTitle: 'Javascript senior developer',
+    dateRun: 'April 18, 2026',
+    candidates: 25,
+    topScore: 89,
+    topScoreClass: 'green',
+    overrides: 2,
+    status: 'Completed',
+  },
+  {
+    sessionId: 's-run',
+    jobId: 'dev-product',
+    sessionLabel: '#1',
+    jobTitle: 'Product engineer',
+    dateRun: 'April 17, 2026',
+    candidates: 25,
+    topScore: 0,
+    topScoreClass: 'blue',
+    overrides: 0,
+    status: 'Running',
+  },
+  {
+    sessionId: 's3',
+    jobId: 'js-senior',
+    sessionLabel: '#14',
+    jobTitle: 'Javascript senior developer',
+    dateRun: 'April 16, 2026',
+    candidates: 25,
+    topScore: 65,
+    topScoreClass: 'orange',
+    overrides: 0,
+    status: 'Completed',
+  },
+];
+
+const defaultTop: SessionTopCandidate[] = [
+  { id: 'c1', name: 'Alice Johnson', scorePercent: 89 },
+  { id: 'c2', name: 'John David', scorePercent: 84 },
+  { id: 'c3', name: 'Mark Robert', scorePercent: 80 },
+  { id: 'c4', name: 'Peter Griffin', scorePercent: 79 },
+  { id: 'c5', name: 'Peter Parker', scorePercent: 78 },
+  { id: 'c6', name: 'Bruce Wayne', scorePercent: 77 },
+  { id: 'c7', name: 'Dwayne Johnson', scorePercent: 76 },
+  { id: 'c8', name: 'Mr Beast', scorePercent: 75 },
+  { id: 'c9', name: 'Sam Wilson', scorePercent: 74 },
+  { id: 'c10', name: 'Natasha Romanoff', scorePercent: 73 },
+];
+
+export const mockSessionResults: SessionResults[] = [
+  {
+    jobId: 'js-senior',
+    sessionId: 's1',
+    jobTitle: 'Javascript Senior developer',
+    summaryLine: 'Screening session — screened 25 candidates on April 18, 2026',
+    topCandidates: defaultTop,
+    featured: {
+      name: 'Alice Johnson',
+      title: 'Senior Software Developer',
+      location: 'Kigali, Rwanda',
+      scorePercent: 89,
+      skillBadges: ['Technical: 87', 'Communication: 85', 'Culture fit: 90', 'Problem solving: 88'],
+    },
+  },
+  {
+    jobId: 'js-senior',
+    sessionId: 's2',
+    jobTitle: 'Javascript Senior developer',
+    summaryLine: 'Screening session — screened 25 candidates on April 18, 2026',
+    topCandidates: defaultTop.map((c, i) => ({ ...c, scorePercent: Math.max(60, 89 - i) })),
+    featured: {
+      name: 'Alice Johnson',
+      title: 'Senior Software Developer',
+      location: 'Kigali, Rwanda',
+      scorePercent: 89,
+      skillBadges: ['Technical: 88', 'Communication: 86', 'Culture fit: 91', 'Problem solving: 87'],
+    },
+  },
+  {
+    jobId: 'js-senior',
+    sessionId: 's3',
+    jobTitle: 'Javascript Senior developer',
+    summaryLine: 'Screening session — screened 18 candidates on April 16, 2026',
+    topCandidates: defaultTop.slice(0, 8),
+    featured: {
+      name: 'John David',
+      title: 'Software Developer',
+      location: 'Huye, Rwanda',
+      scorePercent: 84,
+      skillBadges: ['Technical: 82', 'Communication: 83', 'Culture fit: 86', 'Problem solving: 81'],
+    },
+  },
+  {
+    jobId: 'dev-product',
+    sessionId: 's-run',
+    jobTitle: 'Product engineer',
+    summaryLine: 'Screening session — in progress (25 candidates)',
+    topCandidates: defaultTop.slice(0, 3),
+    featured: {
+      name: 'Alice Johnson',
+      title: 'Product Engineer',
+      location: 'London, UK',
+      scorePercent: 72,
+      skillBadges: ['Product sense: 74', 'Communication: 70', 'Analytics: 71'],
+    },
+  },
+  {
+    jobId: 'designer-1',
+    sessionId: 's4',
+    jobTitle: 'Product Designer',
+    summaryLine: 'Screening session — screened 12 candidates on March 2, 2024',
+    topCandidates: defaultTop.slice(0, 6),
+    featured: {
+      name: 'Mark Robert',
+      title: 'Product Designer',
+      location: 'Karongi, Rwanda',
+      scorePercent: 79,
+      skillBadges: ['Visual design: 80', 'UX: 78', 'Research: 77'],
+    },
+  },
+];
+
+export const mockCandidates: MockCandidate[] = [
+  {
+    id: 'c1',
+    name: 'Alice Johnson',
+    email: 'alice@example.com',
+    headline: 'Senior Software Developer',
+    location: 'Kigali, Rwanda',
+    matchScore: 89,
+    summary:
+      'Full-stack engineer with a focus on Node.js and cloud-native systems. Led hiring loops and mentored juniors.',
+    skills: ['Node.js', 'TypeScript', 'AWS', 'PostgreSQL'],
+  },
+  {
+    id: 'c2',
+    name: 'John David',
+    email: 'john@example.com',
+    headline: 'Software Developer',
+    location: 'Huye, Rwanda',
+    matchScore: 84,
+    summary: 'Backend-oriented developer with experience in APIs and data pipelines.',
+    skills: ['Javascript', 'Python', 'REST', 'Docker'],
+  },
+  {
+    id: 'c3',
+    name: 'Mark Robert',
+    email: 'mark@example.com',
+    headline: 'Product Designer',
+    location: 'Karongi, Rwanda',
+    matchScore: 79,
+    summary: 'Design systems and user research for B2B SaaS products.',
+    skills: ['Figma', 'UX research', 'Prototyping', 'Design systems'],
+  },
+];
+
+export const mockDraftByJobId: Record<string, MockDraftJob> = {
+  'js-senior': {
+    jobId: 'js-senior',
+    titleLine1: 'Javascript Senior',
+    titleLine2: 'developer',
+    skills: ['Javascript', 'Typescript', 'React.js'],
+    experience: '5+ Years',
+    seniority: 'Senior level',
+    location: 'New York city',
+    employmentType: 'Full time',
+    disqualifiers: ['No remote', 'No visa sponsorship', 'No freelancers'],
+  },
+};
+
+export function getJobDetail(jobId: string): JobDetail | undefined {
+  return mockJobDetails[jobId];
+}
+
+export function getJobOpening(jobId: string): JobOpening | undefined {
+  return mockJobOpenings.find((j) => j.id === jobId);
+}
+
+export function getSessionResults(jobId: string, sessionId: string): SessionResults | undefined {
+  return mockSessionResults.find((s) => s.jobId === jobId && s.sessionId === sessionId);
+}
+
+export function getDraftJob(jobId: string): MockDraftJob | undefined {
+  return mockDraftByJobId[jobId];
+}

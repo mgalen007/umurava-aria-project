@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
+import { mockCurrentUser } from '@/lib/mock-data';
 import './dashboard.css';
 
 function stringToColor(str: string) {
@@ -95,20 +96,31 @@ export default function DashboardLayout({
             >
               Screenings
             </Link>
+            <Link
+              href="/dashboard/candidates"
+              className={`nav-item ${isActive('/dashboard/candidates') ? 'active' : ''}`}
+              onClick={closeSidebar}
+            >
+              Candidates
+            </Link>
           </nav>
         </div>
 
         <div className="sidebar-bottom">
           <div className="admin-profile">
-            <Avatar name="Admin" />
+            <Avatar name={mockCurrentUser.name} />
             <div className="admin-info">
-              <span className="admin-name">Admin</span>
-              <span className="admin-email">admin@gmail.com</span>
+              <span className="admin-name">{mockCurrentUser.name}</span>
+              <span className="admin-email">{mockCurrentUser.email}</span>
             </div>
           </div>
 
           <nav className="sidebar-footer-nav">
-            <Link href="#" className="nav-item">
+            <Link
+              href="/dashboard/settings"
+              className={`nav-item ${isActive('/dashboard/settings') ? 'active' : ''}`}
+              onClick={closeSidebar}
+            >
               Settings
             </Link>
             <Link href="#" className="nav-item">
