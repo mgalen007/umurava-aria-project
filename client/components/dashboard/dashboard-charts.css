@@ -1,0 +1,138 @@
+.chart-card--chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border-strong);
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.chart-range-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-button);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.chart-range-btn {
+  border: none;
+  background: var(--surface-default);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chart-range-btn + .chart-range-btn {
+  border-left: 1px solid var(--border-strong);
+}
+
+.chart-range-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+
+.chart-range-btn.is-active {
+  color: var(--accent-color);
+  background-color: rgba(107, 78, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
+}
+
+.chart-recharts-wrap {
+  width: 100%;
+  height: 280px;
+  margin-top: 0.5rem;
+}
+
+.chart-recharts-wrap--bar {
+  height: 260px;
+}
+
+/* Recharts default tooltip wrapper — reset so our box sizes cleanly */
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+.chart-tooltip {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #fff;
+  background: #1f222a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+}
+
+.chart-tooltip--area {
+  position: relative;
+  margin-left: 10px;
+}
+
+.chart-tooltip--area::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #1f222a;
+}
+
+.chart-tooltip__line {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.chart-tooltip__line + .chart-tooltip__line {
+  margin-top: 4px;
+}
+
+.chart-tooltip__line--strong {
+  font-weight: 600;
+  color: #fff;
+}
+
+.chart-tooltip--bar {
+  position: relative;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.chart-tooltip--bar::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1f222a;
+}
+
+.chart-tooltip--bar .chart-tooltip__line {
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chart-range-toggle {
+    align-self: flex-start;
+  }
+}

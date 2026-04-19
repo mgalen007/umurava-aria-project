@@ -11,6 +11,8 @@ export interface DashboardJobRow {
   status: JobListStatus;
   matchScoreAvg: number | null;
   highMatchedCandidate: string | null;
+  candidatesCount: number;
+  lastScreened: string;
 }
 
 export interface JobOpening {
@@ -123,6 +125,8 @@ export const mockDashboardJobRows: DashboardJobRow[] = [
     status: 'Active',
     matchScoreAvg: 81,
     highMatchedCandidate: 'Alice Johnson',
+    candidatesCount: 25,
+    lastScreened: '2 min ago',
   },
   {
     id: 'designer-1',
@@ -131,6 +135,8 @@ export const mockDashboardJobRows: DashboardJobRow[] = [
     status: 'Drafted',
     matchScoreAvg: null,
     highMatchedCandidate: null,
+    candidatesCount: 8,
+    lastScreened: 'now',
   },
   {
     id: 'eng-2',
@@ -139,6 +145,8 @@ export const mockDashboardJobRows: DashboardJobRow[] = [
     status: 'Archived',
     matchScoreAvg: 74,
     highMatchedCandidate: 'Mark Robert',
+    candidatesCount: 13,
+    lastScreened: '1 hr ago',
   },
   {
     id: 'analyst-1',
@@ -147,6 +155,8 @@ export const mockDashboardJobRows: DashboardJobRow[] = [
     status: 'Active',
     matchScoreAvg: 68,
     highMatchedCandidate: 'John David',
+    candidatesCount: 42,
+    lastScreened: '30 min ago',
   },
   {
     id: 'dev-product',
@@ -155,12 +165,69 @@ export const mockDashboardJobRows: DashboardJobRow[] = [
     status: 'Archived',
     matchScoreAvg: 71,
     highMatchedCandidate: 'Peter Griffin',
+    candidatesCount: 19,
+    lastScreened: '3 days ago',
   },
 ];
 
-export const mockApplicationTrend = [12, 18, 9, 22, 15, 30, 24];
+/** Dashboard: application volume (candidates screened per day) */
+export type ApplicationVolumeRange = '7d' | '30d' | '90d';
 
-export const mockShortlistBars = [60, 40, 30, 50, 40, 30, 45, 30];
+export interface ApplicationVolumePoint {
+  /** Short label for axis, e.g. "Apr 18" */
+  label: string;
+  candidates: number;
+}
+
+export const mockApplicationVolumeSeries: Record<ApplicationVolumeRange, ApplicationVolumePoint[]> = {
+  '7d': [
+    { label: 'Apr 14', candidates: 14 },
+    { label: 'Apr 15', candidates: 18 },
+    { label: 'Apr 16', candidates: 12 },
+    { label: 'Apr 17', candidates: 20 },
+    { label: 'Apr 18', candidates: 23 },
+    { label: 'Apr 19', candidates: 19 },
+    { label: 'Apr 20', candidates: 26 },
+    { label: 'Apr 22', candidates: 21 },
+  ],
+  '30d': [
+    { label: 'Mar 26', candidates: 8 },
+    { label: 'Mar 30', candidates: 14 },
+    { label: 'Apr 3', candidates: 11 },
+    { label: 'Apr 7', candidates: 19 },
+    { label: 'Apr 11', candidates: 16 },
+    { label: 'Apr 15', candidates: 22 },
+    { label: 'Apr 19', candidates: 24 },
+    { label: 'Apr 22', candidates: 21 },
+  ],
+  '90d': [
+    { label: 'Jan 26', candidates: 5 },
+    { label: 'Feb 9', candidates: 9 },
+    { label: 'Feb 23', candidates: 12 },
+    { label: 'Mar 9', candidates: 10 },
+    { label: 'Mar 23', candidates: 15 },
+    { label: 'Apr 6', candidates: 18 },
+    { label: 'Apr 22', candidates: 21 },
+  ],
+};
+
+/** Dashboard: shortlist volume by role (abbrev + full title for tooltips) */
+export interface ShortlistRolePoint {
+  abbrev: string;
+  roleTitle: string;
+  shortlisted: number;
+}
+
+export const mockShortlistByRole: ShortlistRolePoint[] = [
+  { abbrev: 'PM', roleTitle: 'Product Manager', shortlisted: 39 },
+  { abbrev: 'MS', roleTitle: 'Marketing Specialist', shortlisted: 14 },
+  { abbrev: 'DA', roleTitle: 'Data Analyst', shortlisted: 13 },
+  { abbrev: 'SE', roleTitle: 'Software Engineer', shortlisted: 8 },
+  { abbrev: 'UX', roleTitle: 'UX Designer', shortlisted: 22 },
+  { abbrev: 'HR', roleTitle: 'HR Partner', shortlisted: 11 },
+  { abbrev: 'FN', roleTitle: 'Finance Analyst', shortlisted: 17 },
+  { abbrev: 'OP', roleTitle: 'Operations Lead', shortlisted: 28 },
+];
 
 export const mockJobOpenings: JobOpening[] = [
   {
