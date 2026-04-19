@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Home, Briefcase, ClipboardList, Settings, Headphones, Users } from 'lucide-react';
 import { mockCurrentUser } from '@/lib/mock-data';
 import './dashboard.css';
 
@@ -30,6 +30,7 @@ function Avatar({ name }: { name: string }) {
         justifyContent: 'center',
         fontWeight: 'bold',
         fontSize: '14px',
+        flexShrink: 0
       }}
     >
       {name ? name.charAt(0).toUpperCase() : '?'}
@@ -43,10 +44,27 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
   const closeSidebar = () => setIsOpen(false);
   const toggleSidebar = () => setIsOpen((value) => !value);
+  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
+  // Auto-collapse sidebar on smaller screens (but not completely narrow like mobile where hamburger triggers)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 1024 && window.innerWidth > 768) {
+        setIsCollapsed(true);
+      } else if (window.innerWidth > 1024) {
+        setIsCollapsed(false);
+      }
+    };
+    
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/dashboard') {
@@ -56,21 +74,24 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="dashboard-wrapper">
+    <div className={`dashboard-wrapper ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className={`mobile-overlay ${isOpen ? 'open' : ''}`} onClick={toggleSidebar} />
 
       <button className="hamburger-btn" onClick={toggleSidebar} type="button">
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-top">
           <div
             className="org-profile"
-            style={{ backgroundColor: 'transparent', padding: 0, marginBottom: '2rem' }}
+            onClick={toggleCollapse}
+            style={{ backgroundColor: 'transparent', padding: 0, marginBottom: '2rem', cursor: 'pointer' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <img src="/image/logo-white.png" alt="ARIA Logo" style={{ height: '32px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden', height: '32px' }}>
+               <div style={{ position: 'relative', width: isCollapsed ? '32px' : '120px', height: '32px', flexShrink: 0, transition: 'width 0.3s' }}>
+                 <img src="/image/logo-white.png" alt="ARIA Logo" style={{ height: '32px', position: 'absolute', left: 0 }} />
+               </div>
             </div>
           </div>
 
@@ -80,28 +101,32 @@ export default function DashboardLayout({
               className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
               onClick={closeSidebar}
             >
-              Dashboard
+              <Home size={20} className="nav-icon" />
+              <span className="nav-label">Dashboard</span>
             </Link>
             <Link
               href="/dashboard/jobs"
               className={`nav-item ${isActive('/dashboard/jobs') ? 'active' : ''}`}
               onClick={closeSidebar}
             >
-              Jobs
+              <Briefcase size={20} className="nav-icon" />
+              <span className="nav-label">Jobs</span>
             </Link>
             <Link
               href="/dashboard/screenings"
               className={`nav-item ${isActive('/dashboard/screenings') ? 'active' : ''}`}
               onClick={closeSidebar}
             >
-              Screenings
+              <ClipboardList size={20} className="nav-icon" />
+              <span className="nav-label">Screenings</span>
             </Link>
             <Link
               href="/dashboard/candidates"
               className={`nav-item ${isActive('/dashboard/candidates') ? 'active' : ''}`}
               onClick={closeSidebar}
             >
-              Candidates
+              <Users size={20} className="nav-icon" />
+              <span className="nav-label">Candidates</span>
             </Link>
           </nav>
         </div>
@@ -121,10 +146,12 @@ export default function DashboardLayout({
               className={`nav-item ${isActive('/dashboard/settings') ? 'active' : ''}`}
               onClick={closeSidebar}
             >
-              Settings
+              <Settings size={20} className="nav-icon" />
+              <span className="nav-label">Settings</span>
             </Link>
             <Link href="#" className="nav-item">
-              Help Center
+              <Headphones size={20} className="nav-icon" />
+              <span className="nav-label">Help Center</span>
             </Link>
           </nav>
         </div>
