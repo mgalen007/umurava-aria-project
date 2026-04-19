@@ -33,7 +33,7 @@
 .status-badge-draft {
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
-  border-radius: var(--radius-button);
+  border-radius: 9999px;
   font-weight: 700;
 }
 
@@ -59,6 +59,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  border-top: 2px solid var(--border-subtle);
+  padding-top: 1rem;
+  transition: border-color 0.2s;
+}
+
+.job-card:hover .job-footer {
+  border-top: 2px solid var(--accent-color);
 }
 
 .badge-outline {
