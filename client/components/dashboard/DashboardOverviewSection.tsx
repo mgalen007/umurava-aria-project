@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DashboardJobRow, JobListStatus } from '@/lib/mock-data';
@@ -38,6 +38,15 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginatedJobs = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const emptyRows = Math.max(0, pageSize - paginatedJobs.length);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, jobQuery]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   const handlePrevious = () => {
     setCurrentPage((page) => Math.max(1, page - 1));
@@ -99,49 +108,61 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
         </thead>
         <tbody>
           {filtered.length === 0 ? (
-            <tr className='overview-tr'>
+            <tr className="overview-tr">
               <td colSpan={6} className="jobs-table-empty">
                 No jobs match your filters.
               </td>
             </tr>
           ) : (
-            paginatedJobs.map((job) => {
-              const variant = matchScoreVariant(job.matchScoreAvg);
-              return (
-                <tr key={job.id}>
-                  <td className="font-medium">
-                    <Link href={`/dashboard/jobs/${job.id}`} className="dashboard-job-link">
-                      {job.role}
-                    </Link>
-                  </td>
-                  <td>
-                    <span className={`status-pill status-pill--${job.status.toLowerCase()}`}>{job.status}</span>
-                  </td>
-                  <td>{job.candidatesCount}</td>
-                  <td>
-                    <div className="match-score-cell">
-                      <div className="match-score-track" aria-hidden={job.matchScoreAvg == null}>
-                        {job.matchScoreAvg != null ? (
-                          <div
-                            className={`match-score-fill match-score-fill--${variant}`}
-                            style={{ width: `${Math.min(100, job.matchScoreAvg)}%` }}
-                          />
-                        ) : null}
+            <>
+              {paginatedJobs.map((job) => {
+                const variant = matchScoreVariant(job.matchScoreAvg);
+                return (
+                  <tr key={job.id}>
+                    <td className="font-medium">
+                      <Link href={`/dashboard/jobs/${job.id}`} className="dashboard-job-link">
+                        {job.role}
+                      </Link>
+                    </td>
+                    <td>
+                      <span className={`status-pill status-pill--${job.status.toLowerCase()}`}>{job.status}</span>
+                    </td>
+                    <td>{job.candidatesCount}</td>
+                    <td>
+                      <div className="match-score-cell">
+                        <div className="match-score-track" aria-hidden={job.matchScoreAvg == null}>
+                          {job.matchScoreAvg != null ? (
+                            <div
+                              className={`match-score-fill match-score-fill--${variant}`}
+                              style={{ width: `${Math.min(100, job.matchScoreAvg)}%` }}
+                            />
+                          ) : null}
+                        </div>
+                        <span className="match-score-value">
+                          {job.matchScoreAvg != null ? `${job.matchScoreAvg}%` : '—'}
+                        </span>
                       </div>
-                      <span className="match-score-value">
-                        {job.matchScoreAvg != null ? `${job.matchScoreAvg}%` : '—'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="text-body-sm">{job.lastScreened}</td>
-                  <td>
-                    <Link href={`/dashboard/jobs/${job.id}`} className="btn btn-primary btn-view-job">
-                      View
-                    </Link>
-                  </td>
+                    </td>
+                    <td className="text-body-sm">{job.lastScreened}</td>
+                    <td>
+                      <Link href={`/dashboard/jobs/${job.id}`} className="btn btn-primary btn-view-job">
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+              {Array.from({ length: emptyRows }, (_, index) => (
+                <tr key={`empty-row-${index}`} className="jobs-table-row--placeholder" aria-hidden="true">
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
                 </tr>
-              );
-            })
+              ))}
+            </>
           )}
         </tbody>
       </table>

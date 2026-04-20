@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { getSessionResults } from '@/lib/mock-data';
-import '../../../../screenings/screenings.css';
 import './results.css';
 
 export default function ScreeningSessionPage({
@@ -17,36 +17,40 @@ export default function ScreeningSessionPage({
   const { featured, topCandidates } = data;
 
   return (
-    <div className="page-container">
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 className="text-h1">{data.jobTitle}</h1>
-        <p className="text-body-sm">{data.summaryLine}</p>
+    <div className="page-container screening-session-page">
+      <DashboardTopBar breadcrumbs={['Screenings', `${data.sessionLabel} . ${data.jobTitle}`]} />
+
+      <div className="session-results-heading">
+        <h1 className="session-results-title">{data.pageTitle}</h1>
+        <p className="session-results-summary">{data.summaryLine}</p>
       </div>
 
-      <div className="results-grid">
-        <div className="candidates-list surface">
-          <h3 className="section-title">Top 10 Candidates</h3>
+      <div className="session-results-grid">
+        <aside className="session-results-sidebar">
+          <h2 className="session-results-section-title">Top 10 Candidates</h2>
 
-          <div className="candidates-list-items">
-            {topCandidates.map((c, i) => (
-              <div key={c.id} className="candidate-row">
-                <span className="candidate-index">{i + 1}.</span>
-                <span className="candidate-name">{c.name}</span>
-                <span className="badge-score green" style={{ marginLeft: 'auto' }}>
-                  {c.scorePercent}%
-                </span>
-              </div>
+          <div className="session-results-candidate-list">
+            {topCandidates.map((candidate, index) => (
+              <button type="button" key={candidate.id} className="session-results-candidate-row">
+                <span className="session-results-candidate-rank">{index + 1}.</span>
+                <span className="session-results-candidate-name">{candidate.name}</span>
+                <span className="session-results-candidate-score">{candidate.scorePercent}%</span>
+              </button>
             ))}
           </div>
-        </div>
 
-        <div className="candidate-deep-dive surface">
-          <div className="deep-dive-header">
-            <div className="candidate-identity">
-              <div className="candidate-avatar" />
-              <div className="candidate-info">
-                <h2 className="text-h2">{featured.name}</h2>
-                <p className="text-body-sm">
+          <button type="button" className="session-results-load-more">
+            Load more
+          </button>
+        </aside>
+
+        <section className="session-results-main">
+          <div className="session-results-profile">
+            <div className="session-results-profile__identity">
+              <div className="session-results-avatar" />
+              <div>
+                <h2 className="session-results-profile__name">{featured.name}</h2>
+                <p className="session-results-profile__meta">
                   {featured.title}
                   <br />
                   {featured.location}
@@ -54,34 +58,66 @@ export default function ScreeningSessionPage({
               </div>
             </div>
 
-            <div className="score-ring-container">
-              <div
-                className="score-ring"
-                style={{
-                  background: `conic-gradient(var(--accent-color) ${featured.scorePercent}%, #E5E7EB 0)`,
-                }}
-              >
-                <div className="score-value">{featured.scorePercent}%</div>
-              </div>
+            <div className="session-results-score-ring" style={{ ['--score' as string]: `${featured.scorePercent}` }}>
+              <div className="session-results-score-ring__inner">{featured.scorePercent}%</div>
             </div>
           </div>
 
-          <div className="skill-badges-belt">
-            {featured.skillBadges.map((label) => (
-              <span key={label} className="badge-purple">
-                {label}
+          <div className="session-results-skill-badges">
+            {featured.skillBadges.map((badge) => (
+              <span key={badge} className="session-results-skill-badge">
+                {badge}
               </span>
             ))}
           </div>
 
-          <h3 className="section-title" style={{ marginTop: '2rem' }}>
-            AI analysis
-          </h3>
-          <div className="analysis-panels">
-            <div className="analysis-box" />
-            <div className="analysis-box" />
+          <div className="session-results-divider" />
+
+          <section className="session-results-analysis">
+            <h3 className="session-results-analysis__title">AI analysis</h3>
+            <div className="session-results-analysis__box">
+              <div className="session-results-analysis__group">
+                <div className="session-results-analysis__label">Strengths</div>
+                <ul className="session-results-analysis__list">
+                  {featured.analysis.strengths.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="session-results-analysis__group">
+                <div className="session-results-analysis__label">Gaps</div>
+                <ul className="session-results-analysis__list">
+                  {featured.analysis.gaps.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <div className="session-results-divider" />
+
+          <div className="session-results-cv-row">
+            <h3 className="session-results-subheading">View candidate Cv</h3>
+            <button type="button" className="session-results-file-pill">
+              {featured.cvLabel}
+            </button>
           </div>
-        </div>
+
+          <div className="session-results-divider" />
+
+          <section className="session-results-assessment">
+            <h3 className="session-results-subheading">Your assessment</h3>
+            <div className="session-results-assessment__box">
+              <div className="session-results-assessment__score">Score</div>
+              <textarea className="session-results-assessment__comment" placeholder="Comment (optional)" />
+            </div>
+            <button type="button" className="session-results-file-pill session-results-file-pill--submit">
+              {featured.cvLabel}
+            </button>
+          </section>
+        </section>
       </div>
     </div>
   );

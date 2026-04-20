@@ -40,16 +40,16 @@
 }
 
 .jobs-table th {
-  padding: 0.875rem 1rem;
-  font-size: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.72rem;
   color: var(--accent-text);
   background-color: var(--accent-color);
   font-weight: 600;
 }
 
 .jobs-table td {
-  padding: 0.8rem 1rem;
-  font-size: 0.8125rem;
+  padding: 0.62rem 0.85rem;
+  font-size: 0.78rem;
   border-bottom: 1px solid var(--border-strong);
 }
 
@@ -82,7 +82,7 @@
 .chart-card {
   background-color: var(--surface-default);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.2rem;
   box-shadow: var(--shadow-sm);
 }
 
@@ -205,13 +205,47 @@
   padding: 0;
 }
 
+.jobs-table--dashboard {
+  table-layout: fixed;
+}
+
+.jobs-table--dashboard th:nth-child(1),
+.jobs-table--dashboard td:nth-child(1) {
+  width: 24%;
+}
+
+.jobs-table--dashboard th:nth-child(2),
+.jobs-table--dashboard td:nth-child(2) {
+  width: 14%;
+}
+
+.jobs-table--dashboard th:nth-child(3),
+.jobs-table--dashboard td:nth-child(3) {
+  width: 10%;
+}
+
+.jobs-table--dashboard th:nth-child(4),
+.jobs-table--dashboard td:nth-child(4) {
+  width: 24%;
+}
+
+.jobs-table--dashboard th:nth-child(5),
+.jobs-table--dashboard td:nth-child(5) {
+  width: 18%;
+}
+
+.jobs-table--dashboard th:nth-child(6),
+.jobs-table--dashboard td:nth-child(6) {
+  width: 10%;
+}
+
 .overview-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 0.75rem 1.1rem;
+  padding: 0.65rem 1rem;
   background-color: #fafafa;
   border-bottom: 1px solid var(--border-strong);
 }
@@ -225,7 +259,7 @@
 
 .overview-heading {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -289,7 +323,7 @@
 }
 
 .jobs-table-empty {
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   font-size: 0.875rem;
   color: var(--text-secondary);
@@ -299,19 +333,19 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
+  gap: 0.55rem;
+  margin-top: 0;
+  padding: 0.7rem 1rem 0.8rem;
 }
 
 .pagination-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border-strong);
-  border-radius: 12px;
+  border-radius: 10px;
   background-color: var(--surface-default);
   color: var(--text-primary);
   cursor: pointer;
@@ -329,9 +363,9 @@
 }
 
 .pagination-info {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  min-width: 2rem;
+  min-width: 2.5rem;
   text-align: center;
 }
 
@@ -362,15 +396,15 @@
 .match-score-cell {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.55rem;
   min-width: 0;
-  max-width: 220px;
+  max-width: 100%;
 }
 
 .match-score-track {
   flex: 1;
-  min-width: 72px;
-  height: 6px;
+  min-width: 56px;
+  height: 5px;
   background-color: var(--border-subtle);
   border-radius: 999px;
   overflow: hidden;
@@ -397,27 +431,41 @@
 .match-score-value {
   flex-shrink: 0;
   min-width: 2.25rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-primary);
   text-align: right;
 }
 
 .btn-view-job {
-  padding: 0.28rem 0.95rem;
-  font-size: 0.72rem;
-  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  padding: 0.24rem 0.72rem;
+  font-size: 0.69rem;
+  border-radius: 8px;
   text-decoration: none;
 }
 
 .dashboard-job-link {
   color: inherit;
   text-decoration: none;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dashboard-job-link:hover {
   color: var(--accent-color);
   text-decoration: underline;
+}
+
+.jobs-table-row--placeholder td {
+  color: transparent;
+  user-select: none;
 }
 
 @media (max-width: 960px) {

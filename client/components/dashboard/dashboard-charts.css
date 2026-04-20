@@ -50,12 +50,12 @@
 
 .chart-recharts-wrap {
   width: 100%;
-  height: 280px;
-  margin-top: 0.5rem;
+  height: 228px;
+  margin-top: 0.35rem;
 }
 
 .chart-recharts-wrap--bar {
-  height: 260px;
+  height: 220px;
 }
 
 /* Recharts default tooltip wrapper — reset so our box sizes cleanly */

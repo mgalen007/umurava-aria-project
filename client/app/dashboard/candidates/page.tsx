@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { mockCandidates } from '@/lib/mock-data';
 import type { MockCandidate } from '@/lib/mock-data';
 import '../screenings/screenings.css';
@@ -23,6 +24,8 @@ export default function CandidatesPage() {
 
   return (
     <div className="page-container">
+      <DashboardTopBar breadcrumbs={['Candidates']} />
+
       <header className="page-header candidates-page-header">
         <h1 className="text-h1">Candidates</h1>
         <Link href="/dashboard/jobs" className="btn btn-secondary" style={{ textDecoration: 'none' }}>

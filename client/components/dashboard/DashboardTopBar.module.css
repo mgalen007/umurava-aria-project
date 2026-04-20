@@ -1,0 +1,141 @@
+.topBar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem 1.25rem;
+  background-color: var(--surface-default);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.6rem 1.5rem;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin-top: calc(-1 * var(--main-content-padding, 2rem));
+  margin-right: calc(-1 * var(--main-content-padding, 2rem));
+  margin-bottom: 0.5rem;
+  margin-left: calc(-1 * var(--main-content-padding, 2rem));
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.navButtons {
+  display: flex;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: #f8fafc;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.iconButton:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.iconButtonBell {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crumb {
+  font-weight: 100;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.crumbCurrent {
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.crumbSeparator {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.searchWrap {
+  display: flex;
+  justify-content: center;
+  width: 240px;
+  height: 100%;
+  min-width: 0;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  height: 100%;
+  background-color: var(--surface-default);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-button);
+  padding: 0.45rem 0.75rem;
+}
+
+.searchIcon {
+  color: var(--text-tertiary);
+  margin-right: 0.5rem;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+}
+
+.createJobButton {
+  text-decoration: none;
+  width: 140px;
+}
+
+@media (max-width: 960px) {
+  .topBar {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .searchWrap {
+    width: 100%;
+    max-width: 320px;
+  }
+}
