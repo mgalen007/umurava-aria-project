@@ -71,8 +71,8 @@ export default function LoginPage() {
             width={60}
             height={60}
             className="brand-logo"
-          />  
-          <div className="brand-wordmark">ARIA</div>        
+          />
+          <div className="brand-wordmark">ARIA</div>
         </div>
       </div>
     </div>

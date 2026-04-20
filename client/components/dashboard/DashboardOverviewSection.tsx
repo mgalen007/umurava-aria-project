@@ -99,7 +99,7 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
         </thead>
         <tbody>
           {filtered.length === 0 ? (
-            <tr>
+            <tr className='overview-tr'>
               <td colSpan={6} className="jobs-table-empty">
                 No jobs match your filters.
               </td>

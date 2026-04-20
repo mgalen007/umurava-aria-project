@@ -60,7 +60,7 @@ export default function DashboardLayout({
         setIsCollapsed(false);
       }
     };
-    
+
     handleResize(); // Initial check
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);

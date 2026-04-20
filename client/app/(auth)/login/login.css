@@ -194,7 +194,7 @@
   flex-direction: column;
 }
 
-.brand-shell{
+.brand-shell {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -219,6 +219,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.985);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -230,6 +231,7 @@
     opacity: 0;
     transform: translateY(14px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
