@@ -81,17 +81,25 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
             />
           </label>
 
-          <div className="overview-filter-wrap">
-            <select
-              className="overview-filter-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              aria-label="Filter jobs by status"
-            >
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="drafted">Drafted</option>
-            </select>
+          <div className="overview-filter-group" role="tablist" aria-label="Filter jobs by status">
+            {(
+              [
+                { id: 'all' as const, label: 'All' },
+                { id: 'active' as const, label: 'Active' },
+                { id: 'drafted' as const, label: 'Drafted' },
+              ] as const
+            ).map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={statusFilter === id}
+                className={`overview-filter-btn ${statusFilter === id ? 'is-active' : ''}`}
+                onClick={() => setStatusFilter(id)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
