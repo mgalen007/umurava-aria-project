@@ -116,12 +116,12 @@
 .overview-table-body {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.2rem;
   padding: 0.15rem 0.75rem 0.7rem;
 }
 
 .overview-row {
-  padding: 0.72rem 0.8rem;
+  padding: 0.5rem 0.8rem;
   border: 1px solid #9ea5b4;
   border-radius: 8px;
   background: linear-gradient(180deg, #f8faff 0%, #f2f5fb 100%);
@@ -224,7 +224,7 @@
   align-items: center;
   justify-content: center;
   min-width: 70px;
-  padding: 0.58rem 0.9rem;
+  padding: 0.1rem 0.9rem;
   border: none;
   border-radius: 8px;
   background: #6d63f6;

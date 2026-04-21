@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FileText, MapPin, Pencil, ShieldAlert, Sparkles } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
+import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
+import { DraftPageSkeleton } from '@/components/skeletons/PageSkeletons';
 import { getDraftJob, getJobOpening } from '@/lib/mock-data';
 import type { MockDraftJob } from '@/lib/mock-data';
 import './draft.css';
@@ -36,8 +38,9 @@ export default function JobDraftPage({ params }: { params: { jobId: string } }) 
   const [description, setDescription] = useState(draft.description);
 
   return (
-    <div className="page-container draft-page">
-      <DashboardTopBar breadcrumbs={['Jobs', 'Draft']} />
+    <PageSkeletonGate skeleton={<DraftPageSkeleton />}>
+      <div className="page-container draft-page">
+        <DashboardTopBar breadcrumbs={['Jobs', 'Draft']} />
 
       <section className="draft-shell">
         <div className="draft-hero">
@@ -152,6 +155,7 @@ export default function JobDraftPage({ params }: { params: { jobId: string } }) 
           </section>
         </div>
       </section>
-    </div>
+      </div>
+    </PageSkeletonGate>
   );
 }

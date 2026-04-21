@@ -30,9 +30,21 @@ export interface JobOpening {
 
 export interface JobApplicant {
   id: string;
-  name: string;
-  exp: string;
-  loc: string;
+  applicantId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  country: string;
+  cvFile: string;
+  headline: string;
+  matchScore: number;
+  yearsExperience: number;
+  appliedAt: string;
+  stage: 'New' | 'Reviewing' | 'Shortlisted' | 'Interviewing';
+  source: 'LinkedIn' | 'Referral' | 'Careers page' | 'Recruiter';
+  summary: string;
+  skills: string[];
 }
 
 export interface JobSessionSummary {
@@ -87,6 +99,29 @@ export interface SessionTopCandidate {
   id: string;
   name: string;
   scorePercent: number;
+}
+
+export interface CandidateDirectoryEntry {
+  id: string;
+  applicantId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  country: string;
+  headline: string;
+  matchScore: number;
+  yearsExperience: number;
+  stage: JobApplicant['stage'];
+  source: JobApplicant['source'];
+  summary: string;
+  skills: string[];
+  cvFile: string;
+  applications: Array<{
+    jobId: string;
+    jobTitle: string;
+    appliedAt: string;
+  }>;
 }
 
 export interface SessionResults {
@@ -328,14 +363,187 @@ export const mockJobOpenings: JobOpening[] = [
 ];
 
 const applicantsJsSenior: JobApplicant[] = [
-  { id: 'c1', name: 'Alice Johnson', exp: 'Javascript', loc: 'Nyanza' },
-  { id: 'c2', name: 'John David', exp: 'Javascript', loc: 'Huye' },
-  { id: 'c3', name: 'Mark Robert', exp: 'Javascript', loc: 'Karongi' },
-  { id: 'c4', name: 'Peter Griffin', exp: 'Javascript', loc: 'Kigali' },
-  { id: 'c5', name: 'Peter Parker', exp: 'Javascript', loc: 'London' },
-  { id: 'c6', name: 'Bruce Wayne', exp: 'Javascript', loc: 'California' },
-  { id: 'c7', name: 'Dwayne Johnson', exp: 'Javascript', loc: 'USA' },
-  { id: 'c8', name: 'Mr Beast', exp: 'Javascript', loc: 'USA' },
+  {
+    id: 'c1',
+    applicantId: 'APP-2026-001',
+    fullName: 'Alice Johnson',
+    email: 'alice.johnson@example.com',
+    phone: '+250 788 102 341',
+    city: 'Kigali',
+    country: 'Rwanda',
+    cvFile: 'alice-johnson-cv.pdf',
+    headline: 'Senior Software Developer',
+    matchScore: 96,
+    yearsExperience: 7,
+    appliedAt: 'April 18, 2026',
+    stage: 'Shortlisted',
+    source: 'Referral',
+    summary:
+      'Full-stack engineer focused on Node.js and cloud-native systems, with a strong history of mentoring and shipping hiring-critical platform work.',
+    skills: ['Node.js', 'TypeScript', 'AWS', 'PostgreSQL'],
+  },
+  {
+    id: 'c2',
+    applicantId: 'APP-2026-002',
+    fullName: 'John David',
+    email: 'john.david@example.com',
+    phone: '+250 784 222 119',
+    city: 'Huye',
+    country: 'Rwanda',
+    cvFile: 'john-david-cv.pdf',
+    headline: 'Backend Software Developer',
+    matchScore: 91,
+    yearsExperience: 5,
+    appliedAt: 'April 17, 2026',
+    stage: 'Reviewing',
+    source: 'LinkedIn',
+    summary: 'Backend-oriented engineer with strong API design, data pipeline, and deployment automation experience.',
+    skills: ['Javascript', 'Python', 'REST', 'Docker'],
+  },
+  {
+    id: 'c3',
+    applicantId: 'APP-2026-003',
+    fullName: 'Mark Robert',
+    email: 'mark.robert@example.com',
+    phone: '+250 782 918 214',
+    city: 'Karongi',
+    country: 'Rwanda',
+    cvFile: 'mark-robert-cv.pdf',
+    headline: 'Product Designer',
+    matchScore: 84,
+    yearsExperience: 6,
+    appliedAt: 'April 16, 2026',
+    stage: 'Interviewing',
+    source: 'Careers page',
+    summary: 'Design systems and user research specialist with strong B2B SaaS and product discovery experience.',
+    skills: ['Figma', 'UX Research', 'Prototyping', 'Design Systems'],
+  },
+  {
+    id: 'c4',
+    applicantId: 'APP-2026-004',
+    fullName: 'Peter Griffin',
+    email: 'peter.griffin@example.com',
+    phone: '+250 783 390 512',
+    city: 'Kigali',
+    country: 'Rwanda',
+    cvFile: 'peter-griffin-cv.pdf',
+    headline: 'Frontend Engineer',
+    matchScore: 79,
+    yearsExperience: 4,
+    appliedAt: 'April 15, 2026',
+    stage: 'Reviewing',
+    source: 'LinkedIn',
+    summary: 'Frontend-focused engineer experienced with component systems, accessibility, and product-facing interface work.',
+    skills: ['React', 'Next.js', 'TypeScript', 'Accessibility'],
+  },
+  {
+    id: 'c5',
+    applicantId: 'APP-2026-005',
+    fullName: 'Peter Parker',
+    email: 'peter.parker@example.com',
+    phone: '+44 7700 900 125',
+    city: 'London',
+    country: 'United Kingdom',
+    cvFile: 'peter-parker-cv.pdf',
+    headline: 'Product Engineer',
+    matchScore: 73,
+    yearsExperience: 5,
+    appliedAt: 'April 14, 2026',
+    stage: 'New',
+    source: 'Referral',
+    summary: 'Product-minded software engineer comfortable across frontend implementation, QA, and collaboration with PMs.',
+    skills: ['React', 'Node.js', 'Testing', 'Product Thinking'],
+  },
+  {
+    id: 'c6',
+    applicantId: 'APP-2026-006',
+    fullName: 'Bruce Wayne',
+    email: 'bruce.wayne@example.com',
+    phone: '+1 415 555 1932',
+    city: 'San Francisco',
+    country: 'United States',
+    cvFile: 'bruce-wayne-cv.pdf',
+    headline: 'Platform Engineer',
+    matchScore: 68,
+    yearsExperience: 8,
+    appliedAt: 'April 13, 2026',
+    stage: 'Reviewing',
+    source: 'Recruiter',
+    summary: 'Infrastructure and systems engineer with experience across reliability, observability, and scalable delivery pipelines.',
+    skills: ['Kubernetes', 'Go', 'AWS', 'Observability'],
+  },
+  {
+    id: 'c7',
+    applicantId: 'APP-2026-007',
+    fullName: 'Dwayne Johnson',
+    email: 'dwayne.johnson@example.com',
+    phone: '+1 310 555 8742',
+    city: 'Miami',
+    country: 'United States',
+    cvFile: 'dwayne-johnson-cv.pdf',
+    headline: 'Operations and Program Lead',
+    matchScore: 57,
+    yearsExperience: 9,
+    appliedAt: 'April 12, 2026',
+    stage: 'New',
+    source: 'Recruiter',
+    summary: 'Cross-functional operator with strengths in hiring coordination, delivery rituals, and organizational planning.',
+    skills: ['Program Management', 'Operations', 'Hiring Coordination', 'Stakeholder Management'],
+  },
+  {
+    id: 'c8',
+    applicantId: 'APP-2026-008',
+    fullName: 'Jimmy Donaldson',
+    email: 'jimmy.d@example.com',
+    phone: '+1 919 555 0241',
+    city: 'Greenville',
+    country: 'United States',
+    cvFile: 'jimmy-donaldson-cv.pdf',
+    headline: 'Growth Product Marketer',
+    matchScore: 46,
+    yearsExperience: 4,
+    appliedAt: 'April 11, 2026',
+    stage: 'New',
+    source: 'Careers page',
+    summary: 'Growth-focused marketer with experimentation, content, and audience insights experience across digital channels.',
+    skills: ['Growth', 'Campaigns', 'Analytics', 'Content Strategy'],
+  },
+  {
+    id: 'c9',
+    applicantId: 'APP-2026-009',
+    fullName: 'Sam Wilson',
+    email: 'sam.wilson@example.com',
+    phone: '+254 712 888 511',
+    city: 'Nairobi',
+    country: 'Kenya',
+    cvFile: 'sam-wilson-cv.pdf',
+    headline: 'Data Analyst',
+    matchScore: 34,
+    yearsExperience: 3,
+    appliedAt: 'April 10, 2026',
+    stage: 'New',
+    source: 'LinkedIn',
+    summary: 'Analyst with strong dashboarding, SQL reporting, and stakeholder-facing reporting experience.',
+    skills: ['SQL', 'Power BI', 'Excel', 'Python'],
+  },
+  {
+    id: 'c10',
+    applicantId: 'APP-2026-010',
+    fullName: 'Natasha Romanoff',
+    email: 'natasha.romanoff@example.com',
+    phone: '+250 787 001 203',
+    city: 'Musanze',
+    country: 'Rwanda',
+    cvFile: 'natasha-romanoff-cv.pdf',
+    headline: 'QA Automation Engineer',
+    matchScore: 12,
+    yearsExperience: 6,
+    appliedAt: 'April 9, 2026',
+    stage: 'Reviewing',
+    source: 'Referral',
+    summary: 'Quality engineer with strong automation coverage, release confidence practices, and regression tooling experience.',
+    skills: ['Playwright', 'Cypress', 'QA Strategy', 'CI/CD'],
+  },
 ];
 
 const sessionsJsSenior: JobSessionSummary[] = [
@@ -384,7 +592,7 @@ export const mockJobDetails: Record<string, JobDetail> = {
   'designer-1': {
     id: 'designer-1',
     title: 'Product Designer',
-    applicants: applicantsJsSenior.slice(0, 4),
+    applicants: applicantsJsSenior.slice(0, 6),
     sessions: [
       {
         id: 's4',
@@ -402,7 +610,7 @@ export const mockJobDetails: Record<string, JobDetail> = {
   'analyst-1': {
     id: 'analyst-1',
     title: 'Junior Data Analyst',
-    applicants: applicantsJsSenior.slice(2, 6),
+    applicants: applicantsJsSenior.slice(2, 8),
     sessions: [],
   },
   'dev-product': {
@@ -633,16 +841,16 @@ export const mockScreeningTableRows: ScreeningTableRow[] = [
 ];
 
 const defaultTop: SessionTopCandidate[] = [
-  { id: 'c1', name: 'Alice Johnson', scorePercent: 89 },
-  { id: 'c2', name: 'John David', scorePercent: 84 },
-  { id: 'c3', name: 'Mark Robert', scorePercent: 80 },
-  { id: 'c4', name: 'Peter Griffin', scorePercent: 79 },
+  { id: 'c1', name: 'Alice Johnson', scorePercent: 100 },
+  { id: 'c2', name: 'John David', scorePercent: 96 },
+  { id: 'c3', name: 'Mark Robert', scorePercent: 90 },
+  { id: 'c4', name: 'Peter Griffin', scorePercent: 84 },
   { id: 'c5', name: 'Peter Parker', scorePercent: 78 },
-  { id: 'c6', name: 'Bruce Wayne', scorePercent: 77 },
-  { id: 'c7', name: 'Dwayne Johnson', scorePercent: 76 },
-  { id: 'c8', name: 'Mr Beast', scorePercent: 75 },
-  { id: 'c9', name: 'Sam Wilson', scorePercent: 74 },
-  { id: 'c10', name: 'Natasha Romanoff', scorePercent: 73 },
+  { id: 'c6', name: 'Bruce Wayne', scorePercent: 70 },
+  { id: 'c7', name: 'Dwayne Johnson', scorePercent: 60 },
+  { id: 'c8', name: 'Jimmy Donaldson', scorePercent: 50 },
+  { id: 'c9', name: 'Sam Wilson', scorePercent: 25 },
+  { id: 'c10', name: 'Natasha Romanoff', scorePercent: 0 },
 ];
 
 export const mockSessionResults: SessionResults[] = [
@@ -790,6 +998,67 @@ export const mockCandidates: MockCandidate[] = [
     skills: ['Figma', 'UX research', 'Prototyping', 'Design systems'],
   },
 ];
+
+export function getApplicantCvUrl(applicant: Pick<JobApplicant, 'fullName' | 'applicantId' | 'email' | 'phone' | 'city' | 'country' | 'cvFile'>): string {
+  const content = [
+    applicant.cvFile,
+    `${applicant.fullName}`,
+    `Applicant ID: ${applicant.applicantId}`,
+    `Email: ${applicant.email}`,
+    `Phone: ${applicant.phone}`,
+    `Location: ${applicant.city}, ${applicant.country}`,
+    '',
+    'This is a mock CV document generated for UI prototyping.',
+  ].join('\n');
+
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`;
+}
+
+export function getJobApplicant(jobId: string, candidateId: string): JobApplicant | undefined {
+  return mockJobDetails[jobId]?.applicants.find((applicant) => applicant.id === candidateId);
+}
+
+export function getCandidateDirectoryEntries(): CandidateDirectoryEntry[] {
+  const candidates = new Map<string, CandidateDirectoryEntry>();
+
+  Object.values(mockJobDetails).forEach((job) => {
+    job.applicants.forEach((applicant) => {
+      const existing = candidates.get(applicant.id);
+      const application = {
+        jobId: job.id,
+        jobTitle: job.title,
+        appliedAt: applicant.appliedAt,
+      };
+
+      if (existing) {
+        existing.applications.push(application);
+        existing.matchScore = Math.max(existing.matchScore, applicant.matchScore);
+        return;
+      }
+
+      candidates.set(applicant.id, {
+        id: applicant.id,
+        applicantId: applicant.applicantId,
+        fullName: applicant.fullName,
+        email: applicant.email,
+        phone: applicant.phone,
+        city: applicant.city,
+        country: applicant.country,
+        headline: applicant.headline,
+        matchScore: applicant.matchScore,
+        yearsExperience: applicant.yearsExperience,
+        stage: applicant.stage,
+        source: applicant.source,
+        summary: applicant.summary,
+        skills: applicant.skills,
+        cvFile: applicant.cvFile,
+        applications: [application],
+      });
+    });
+  });
+
+  return Array.from(candidates.values()).sort((a, b) => b.matchScore - a.matchScore);
+}
 
 export const mockDraftByJobId: Record<string, MockDraftJob> = {
   'js-senior': {

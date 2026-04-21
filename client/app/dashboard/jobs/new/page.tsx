@@ -1,6 +1,8 @@
 'use client';
 
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from 'react';
+import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
+import { CreateJobPageSkeleton } from '@/components/skeletons/PageSkeletons';
 import './create-job.css';
 
 const seniorityLevels = ['Junior', 'Mid', 'Senior', 'Lead'] as const;
@@ -217,15 +219,16 @@ export default function CreateJobPage() {
   }
 
   return (
-    <div className="page-container flex-col" style={{ alignItems: 'center', paddingTop: '2rem' }}>
-      <div className="create-job-card surface">
-        <h2 className="text-h2" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          Create Job
-        </h2>
+    <PageSkeletonGate skeleton={<CreateJobPageSkeleton />}>
+      <div className="page-container flex-col" style={{ alignItems: 'center', paddingTop: '2rem' }}>
+        <div className="create-job-card surface">
+          <h2 className="text-h2" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            Create Job
+          </h2>
 
-        <form className="create-job-form" onSubmit={handleCreateJob}>
-          <div className="form-section">
-            <h3 className="section-subtitle">Role</h3>
+          <form className="create-job-form" onSubmit={handleCreateJob}>
+            <div className="form-section">
+              <h3 className="section-subtitle">Role</h3>
 
             <div className="input-row input-row--stack-mobile">
               <label htmlFor="job-title">Job title</label>
@@ -440,16 +443,17 @@ export default function CreateJobPage() {
             </div>
           ) : null}
 
-          <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={handleSaveDraft}>
-              Save as draft
-            </button>
-            <button type="submit" className="btn btn-primary">
-              Create new job
-            </button>
-          </div>
-        </form>
+            <div className="form-actions">
+              <button type="button" className="btn btn-secondary" onClick={handleSaveDraft}>
+                Save as draft
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Create new job
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </PageSkeletonGate>
   );
 }

@@ -53,6 +53,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+body[data-page-loading='true'] {
+  cursor: progress;
+}
+
 a {
   color: inherit;
   text-decoration: none;

@@ -1,0 +1,349 @@
+.skeleton-surface {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-surface--tight {
+  padding: 0.55rem;
+}
+
+.skeleton-block {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(223, 227, 235, 0.9), rgba(236, 239, 244, 0.95));
+}
+
+.skeleton-block::after {
+  content: '';
+  position: absolute;
+  inset: -140%;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.14) 43%,
+    rgba(255, 255, 255, 0.52) 50%,
+    rgba(255, 255, 255, 0.14) 57%,
+    transparent 70%
+  );
+  transform: translate3d(-35%, -35%, 0) rotate(18deg);
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-block--rounded-md {
+  border-radius: 10px;
+}
+
+.skeleton-block--rounded-lg {
+  border-radius: 16px;
+}
+
+.skeleton-block--pill {
+  border-radius: 999px;
+}
+
+.skeleton-block--circle {
+  border-radius: 50%;
+}
+
+.skeleton-block--divider {
+  border-radius: 999px;
+  background: rgba(213, 217, 227, 0.8);
+}
+
+.skeleton-block--divider::after {
+  display: none;
+}
+
+.skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeleton-stack--center {
+  align-items: center;
+}
+
+.skeleton-space-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.skeleton-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.skeleton-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.skeleton-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.4fr);
+  gap: 1.5rem;
+}
+
+.skeleton-topbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem 1.25rem;
+  background-color: var(--surface-default);
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin-top: calc(-1 * var(--main-content-padding, 2rem));
+  margin-right: calc(-1 * var(--main-content-padding, 2rem));
+  margin-bottom: 0.5rem;
+  margin-left: calc(-1 * var(--main-content-padding, 2rem));
+  padding: 0.6rem 1.5rem;
+}
+
+.skeleton-topbar__left,
+.skeleton-topbar__right,
+.skeleton-nav-pills,
+.skeleton-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.skeleton-topbar__left,
+.skeleton-topbar__right {
+  min-width: 0;
+}
+
+.skeleton-topbar__right {
+  justify-content: flex-end;
+}
+
+.skeleton-overview-panel,
+.skeleton-screenings-shell,
+.skeleton-form-card,
+.skeleton-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeleton-overview-toolbar,
+.skeleton-page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.skeleton-overview-controls {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.skeleton-table-shell,
+.skeleton-screenings-shell,
+.skeleton-settings-card {
+  padding: 1rem;
+}
+
+.skeleton-table-head,
+.skeleton-table-row {
+  display: grid;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.skeleton-table-head {
+  grid-template-columns: inherit;
+  padding-bottom: 0.85rem;
+}
+
+.skeleton-table-row {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #d9dee7;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fbfcff 0%, #f3f6fb 100%);
+}
+
+.skeleton-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.skeleton-metric-card,
+.skeleton-chart-card,
+.skeleton-job-card,
+.skeleton-inner-card,
+.skeleton-main-panel,
+.skeleton-sidebar-column,
+.skeleton-card-stack,
+.skeleton-form-card,
+.skeleton-hero,
+.skeleton-settings-card,
+.skeleton-login-card {
+  padding: 1rem;
+}
+
+.skeleton-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.skeleton-job-card,
+.skeleton-card-stack,
+.skeleton-main-panel,
+.skeleton-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeleton-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeleton-panel-header,
+.skeleton-identity,
+.skeleton-list-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.skeleton-panel-header {
+  justify-content: space-between;
+}
+
+.skeleton-identity {
+  align-items: flex-start;
+}
+
+.skeleton-list-row {
+  justify-content: flex-start;
+}
+
+.skeleton-center-shell {
+  align-items: center;
+  padding-top: 2rem;
+}
+
+.skeleton-form-card {
+  width: min(100%, 960px);
+}
+
+.skeleton-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.skeleton-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.skeleton-login-shell {
+  overflow: hidden;
+}
+
+.skeleton-login-card,
+.skeleton-login-branding {
+  min-height: 100%;
+}
+
+.skeleton-login-branding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translate3d(-45%, -45%, 0) rotate(18deg);
+  }
+
+  100% {
+    transform: translate3d(42%, 42%, 0) rotate(18deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block::after {
+    animation: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .skeleton-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skeleton-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .skeleton-topbar,
+  .skeleton-overview-toolbar,
+  .skeleton-page-toolbar,
+  .skeleton-hero {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .skeleton-topbar__right,
+  .skeleton-toolbar-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .skeleton-overview-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .skeleton-two-column,
+  .skeleton-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .skeleton-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skeleton-topbar {
+    padding: 0.75rem 1rem;
+  }
+
+  .skeleton-table-shell,
+  .skeleton-screenings-shell,
+  .skeleton-settings-card,
+  .skeleton-job-card,
+  .skeleton-card-stack,
+  .skeleton-main-panel,
+  .skeleton-form-card,
+  .skeleton-hero,
+  .skeleton-login-card {
+    padding: 0.85rem;
+  }
+}
