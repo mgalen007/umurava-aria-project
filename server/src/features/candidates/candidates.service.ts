@@ -1,5 +1,5 @@
 import { Candidate } from './candidates.model';
-import { CreateCandidateDto, UpdateCandidateDto } from './candidates.dto';
+import { CreateCandidateDto, IngestCandidateDto, UpdateCandidateDto } from './candidates.dto';
 import { AppError } from '../../middleware/error';
 import { NormalizeService } from '../../ai/normalize.service'
 
@@ -8,12 +8,20 @@ const normalizeService = new NormalizeService()
 export class CandidatesService {
 
   async create(data: CreateCandidateDto, uploadedBy: string) {
+    return this.createCandidate(data, uploadedBy, 'manual_entry');
+  }
+
+  private async createCandidate(
+    data: CreateCandidateDto | IngestCandidateDto,
+    uploadedBy: string,
+    source: 'manual_entry' | 'pdf_resume' | 'csv_upload'
+  ) {
     const existing = await Candidate.findOne({ email: data.email });
     if (existing) throw new AppError('A candidate with this email already exists', 409);
 
     const candidate = await Candidate.create({
       ...data,
-      source: 'umurava_json',
+      source,
       uploadedBy,
       extractionConfidence: 1,
     });
@@ -61,7 +69,7 @@ export class CandidatesService {
     const results = await Promise.allSettled(
       files.map(async (file) => {
         const data = await normalizeService.fromPDF(file.buffer);
-        return this.create(data, uploadedBy);
+        return this.createCandidate(data, uploadedBy, 'pdf_resume');
       })
     );
 
@@ -82,7 +90,7 @@ export class CandidatesService {
       : await normalizeService.fromExcel(file.buffer);
 
     const results = await Promise.allSettled(
-      rows.map((data) => this.create(data, uploadedBy))
+      rows.map((data) => this.createCandidate(data, uploadedBy, 'csv_upload'))
     );
 
     const succeeded = results

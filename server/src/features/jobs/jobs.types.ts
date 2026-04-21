@@ -14,4 +14,6 @@ export interface IJob extends Document {
   hardRequirements: string[];
   status: 'draft' | 'active' | 'closed';
   createdBy: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
