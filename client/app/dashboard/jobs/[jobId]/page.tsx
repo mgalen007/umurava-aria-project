@@ -18,10 +18,10 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
 
       <div className="applicants-layout">
         <section className="applicants-main">
-          <div className="applicants-actions">
+          <div className="applicants-toolbar">
             <h1 className="applicants-title">Job applicants</h1>
 
-            <div className="applicants-actions-bar">
+            <div className="applicants-toolbar__controls">
               <label className="applicants-search">
                 <Search size={18} className="applicants-search__icon" aria-hidden />
                 <input type="text" className="applicants-search__input" placeholder="Search" />

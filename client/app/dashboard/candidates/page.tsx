@@ -26,11 +26,13 @@ export default function CandidatesPage() {
     <div className="page-container">
       <DashboardTopBar breadcrumbs={['Candidates']} />
 
-      <header className="page-header candidates-page-header">
-        <h1 className="text-h1">Candidates</h1>
-        <Link href="/dashboard/jobs" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-          View jobs
-        </Link>
+      <header className="candidates-toolbar">
+        <h1 className="candidates-heading">Candidates</h1>
+        <div className="candidates-toolbar__controls">
+          <Link href="/dashboard/jobs" className="candidates-action-btn">
+            View jobs
+          </Link>
+        </div>
       </header>
 
       <div className="table-container">
