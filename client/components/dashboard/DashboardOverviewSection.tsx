@@ -66,39 +66,33 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
   return (
     <section className="overview-panel">
       <div className="overview-toolbar">
-        <div className="overview-toolbar__left">
-          <h2 className="overview-heading">Overview</h2>
-          <div className="overview-filter" role="tablist" aria-label="Filter jobs by status">
-            {(
-              [
-                { id: 'all' as const, label: 'All' },
-                { id: 'active' as const, label: 'Active' },
-                { id: 'drafted' as const, label: 'Drafted' },
-              ] as const
-            ).map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={statusFilter === id}
-                className={`overview-filter__btn ${statusFilter === id ? 'is-active' : ''}`}
-                onClick={() => setStatusFilter(id)}
-              >
-                {label}
-              </button>
-            ))}
+        <h2 className="overview-heading">Overview</h2>
+
+        <div className="overview-toolbar__controls">
+          <label className="overview-search">
+            <Search size={18} className="overview-search__icon" aria-hidden />
+            <input
+              type="search"
+              className="overview-search__input"
+              placeholder="Search jobs"
+              value={jobQuery}
+              onChange={(e) => setJobQuery(e.target.value)}
+              aria-label="Search jobs"
+            />
+          </label>
+
+          <div className="overview-filter-wrap">
+            <select
+              className="overview-filter-select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              aria-label="Filter jobs by status"
+            >
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="drafted">Drafted</option>
+            </select>
           </div>
-        </div>
-        <div className="overview-toolbar__search">
-          <Search size={16} className="overview-toolbar__search-icon" aria-hidden />
-          <input
-            type="search"
-            className="overview-toolbar__search-input"
-            placeholder="Search jobs"
-            value={jobQuery}
-            onChange={(e) => setJobQuery(e.target.value)}
-            aria-label="Search jobs"
-          />
         </div>
       </div>
 
