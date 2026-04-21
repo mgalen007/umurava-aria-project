@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DashboardJobRow, JobListStatus } from '@/lib/mock-data';
+import './dashboard-overview.css';
 
 export type StatusFilter = 'all' | 'active' | 'drafted';
 
@@ -38,7 +39,6 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginatedJobs = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const emptyRows = Math.max(0, pageSize - paginatedJobs.length);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -56,8 +56,15 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
     setCurrentPage((page) => Math.min(totalPages, page + 1));
   };
 
+  const pageStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const pageEnd = filtered.length === 0 ? 0 : Math.min(currentPage * pageSize, filtered.length);
+  const visiblePages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(
+    Math.max(0, currentPage - 2),
+    Math.max(0, currentPage - 2) + 3
+  );
+
   return (
-    <div className="table-container table-container--dashboard">
+    <section className="overview-panel">
       <div className="overview-toolbar">
         <div className="overview-toolbar__left">
           <h2 className="overview-heading">Overview</h2>
@@ -95,103 +102,99 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
         </div>
       </div>
 
-      <table className="jobs-table jobs-table--dashboard">
-        <thead>
-          <tr>
-            <th>Job role</th>
-            <th>Status badge</th>
-            <th>Candidates</th>
-            <th>Average Match Score (%)</th>
-            <th>Last screened</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.length === 0 ? (
-            <tr className="overview-tr">
-              <td colSpan={6} className="jobs-table-empty">
-                No jobs match your filters.
-              </td>
-            </tr>
-          ) : (
-            <>
-              {paginatedJobs.map((job) => {
-                const variant = matchScoreVariant(job.matchScoreAvg);
-                return (
-                  <tr key={job.id}>
-                    <td className="font-medium">
-                      <Link href={`/dashboard/jobs/${job.id}`} className="dashboard-job-link">
-                        {job.role}
-                      </Link>
-                    </td>
-                    <td>
-                      <span className={`status-pill status-pill--${job.status.toLowerCase()}`}>{job.status}</span>
-                    </td>
-                    <td>{job.candidatesCount}</td>
-                    <td>
-                      <div className="match-score-cell">
-                        <div className="match-score-track" aria-hidden={job.matchScoreAvg == null}>
-                          {job.matchScoreAvg != null ? (
-                            <div
-                              className={`match-score-fill match-score-fill--${variant}`}
-                              style={{ width: `${Math.min(100, job.matchScoreAvg)}%` }}
-                            />
-                          ) : null}
-                        </div>
-                        <span className="match-score-value">
-                          {job.matchScoreAvg != null ? `${job.matchScoreAvg}%` : '—'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="text-body-sm">{job.lastScreened}</td>
-                    <td>
-                      <Link href={`/dashboard/jobs/${job.id}`} className="btn btn-primary btn-view-job">
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-              {Array.from({ length: emptyRows }, (_, index) => (
-                <tr key={`empty-row-${index}`} className="jobs-table-row--placeholder" aria-hidden="true">
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                </tr>
-              ))}
-            </>
-          )}
-        </tbody>
-      </table>
-
-      {totalPages > 1 && (
-        <div className="pagination-controls overview-pagination-controls">
-          <button
-            type="button"
-            className="pagination-btn"
-            onClick={handlePrevious}
-            disabled={currentPage === 1}
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="pagination-info">
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            type="button"
-            className="pagination-btn"
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            aria-label="Next page"
-          >
-            <ChevronRight size={16} />
-          </button>
+      <div className="overview-table-shell">
+        <div className="overview-table-head">
+          <span>Job role</span>
+          <span>Status</span>
+          <span>Candidates</span>
+          <span>Match Score</span>
+          <span>Last screened</span>
+          <span>Action</span>
         </div>
-      )}
-    </div>
+
+        <div className="overview-table-body">
+          {paginatedJobs.map((job) => {
+            const variant = matchScoreVariant(job.matchScoreAvg);
+            return (
+              <article className="overview-row" key={job.id}>
+                <div className="overview-row__job">
+                  <Link href={`/dashboard/jobs/${job.id}`} className="overview-job-link">
+                    {job.role}
+                  </Link>
+                </div>
+                <div className="overview-row__status">
+                  <span className={`status-pill status-pill--${job.status.toLowerCase()}`}>{job.status}</span>
+                </div>
+                <div className="overview-row__candidates">{job.candidatesCount}</div>
+                <div className="overview-row__score">
+                  <div className="match-score-cell">
+                    <div className="match-score-track" aria-hidden={job.matchScoreAvg == null}>
+                      {job.matchScoreAvg != null ? (
+                        <div
+                          className={`match-score-fill match-score-fill--${variant}`}
+                          style={{ width: `${Math.min(100, job.matchScoreAvg)}%` }}
+                        />
+                      ) : null}
+                    </div>
+                    <span className="match-score-value">
+                      {job.matchScoreAvg != null ? `${job.matchScoreAvg}%` : '—'}
+                    </span>
+                  </div>
+                </div>
+                <div className="overview-row__date">{job.lastScreened}</div>
+                <div className="overview-row__action">
+                  <Link href={`/dashboard/jobs/${job.id}`} className="overview-action-btn">
+                    View
+                  </Link>
+                </div>
+              </article>
+            );
+          })}
+
+          {paginatedJobs.length === 0 ? <div className="overview-empty">No jobs match your filters.</div> : null}
+        </div>
+
+        <div className="overview-footer">
+          <p className="overview-footer__summary">
+            Showing {pageStart}-{pageEnd} jobs out of {filtered.length} jobs
+          </p>
+
+          <div className="overview-pagination">
+            <button
+              type="button"
+              className="overview-pagination__nav"
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </button>
+
+            <div className="overview-pagination__pages">
+              {visiblePages.map((pageNumber) => (
+                <button
+                  type="button"
+                  key={pageNumber}
+                  className={`overview-pagination__page ${pageNumber === currentPage ? 'is-active' : ''}`}
+                  onClick={() => setCurrentPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="overview-pagination__nav"
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
