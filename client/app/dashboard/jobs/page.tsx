@@ -14,7 +14,7 @@ export default function JobsPage() {
         <div className="jobs-toolbar">
           <h1 className="jobs-heading">Job openings</h1>
 
-          <div className="jobs-toolbar__actions">
+          <div className="jobs-toolbar__controls">
             <div className="jobs-sort-group">
               <button className="jobs-sort-btn jobs-sort-btn--primary" type="button">
                 Sort by Status <ArrowDown size={14} />
