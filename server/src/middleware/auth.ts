@@ -5,6 +5,8 @@ import { AppError } from './error';
 export interface AuthPayload {
   id: string;
   email: string;
+  username: string;
+  role: 'admin' | 'recruiter';
 }
 
 declare global {
@@ -22,8 +24,12 @@ export function auth(req: Request, _res: Response, next: NextFunction) {
   }
 
   const token = header.split(' ')[1];
+  if (!process.env.JWT_SECRET) {
+    return next(new AppError('JWT_SECRET is not configured', 500));
+  }
+
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
+    const payload = jwt.verify(token, process.env.JWT_SECRET) as AuthPayload;
     req.user = payload;
     next();
   } catch {

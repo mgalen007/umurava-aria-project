@@ -184,13 +184,13 @@ export class AIService {
 
     const candidatesContext = candidates.map((c) => ({
       candidate_id:            c._id.toString(),
-      candidate_name:          c.fullName,
+      candidate_name:          this.buildCandidateName(c),
       headline:                c.headline,
-      summary:                 c.summary,
+      summary:                 c.bio ?? null,
       location:                c.location,
       languages:               c.languages,
-      total_years_experience:  c.totalYearsExperience,
-      work_experience:         c.workExperience,
+      total_years_experience:  this.getTotalYearsExperience(c),
+      work_experience:         c.experience,
       education:               c.education,
       skills:                  c.skills,
       certifications:          c.certifications,
@@ -209,6 +209,32 @@ export class AIService {
     Evaluate all ${candidates.length} candidates against the job requirement.
     Rank them relative to each other. Return the complete JSON object only.
     `.trim();
+  }
+
+  private buildCandidateName(candidate: ICandidate): string {
+    return [candidate.firstName, candidate.lastName].filter(Boolean).join(' ').trim();
+  }
+
+  private getTotalYearsExperience(candidate: ICandidate): number {
+    return candidate.experience.reduce((total, item) => {
+      const startYear = this.getYear(item.startDate);
+      if (!startYear) return total;
+
+      const endYear = item.isCurrent ? new Date().getFullYear() : (this.getYear(item.endDate) ?? new Date().getFullYear());
+      const years = Math.max(0, endYear - startYear);
+      return total + years;
+    }, 0);
+  }
+
+  private getYear(value?: string): number | null {
+    if (!value) return null;
+
+    const match = value.match(/\b(19|20)\d{2}\b/);
+    if (match) return Number(match[0]);
+
+    const parsed = new Date(value);
+    const year = parsed.getFullYear();
+    return Number.isNaN(year) ? null : year;
   }
 
   private parse(raw: string): AIRankingResult {

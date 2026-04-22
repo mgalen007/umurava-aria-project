@@ -57,24 +57,61 @@ const socialLinksDto = z.object({
   portfolio: z.url().optional(),
 }).catchall(z.string());
 
-export const createCandidateDto = z.object({
+const candidateFields = {
   firstName:      z.string().min(1, 'First name is required'),
   lastName:       z.string().min(1, 'Last name is required'),
   email:          z.email('Invalid email address'),
   headline:       z.string().min(1, 'Headline is required'),
   bio:            z.string().optional(),
   location:       z.string().min(1, 'Location is required'),
-  skills:         z.array(skillDto).min(1, 'At least one skill is required'),
+  skills:         z.array(skillDto).default([]),
   languages:      z.array(languageDto).default([]),
-  experience:     z.array(experienceDto).min(1, 'At least one experience entry is required'),
-  education:      z.array(educationDto).min(1, 'At least one education entry is required'),
+  experience:     z.array(experienceDto).default([]),
+  education:      z.array(educationDto).default([]),
   certifications: z.array(certificationDto).default([]),
-  projects:       z.array(projectDto).min(1, 'At least one project is required'),
+  projects:       z.array(projectDto).default([]),
   availability:   availabilityDto,
   socialLinks:    socialLinksDto.optional(),
+};
+
+export const ingestCandidateDto = z.object(candidateFields);
+
+export const createCandidateDto = ingestCandidateDto.superRefine((data, ctx) => {
+  if (data.skills.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one skill is required',
+      path: ['skills'],
+    });
+  }
+
+  if (data.experience.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one experience entry is required',
+      path: ['experience'],
+    });
+  }
+
+  if (data.education.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one education entry is required',
+      path: ['education'],
+    });
+  }
+
+  if (data.projects.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one project is required',
+      path: ['projects'],
+    });
+  }
 });
 
 export const updateCandidateDto = createCandidateDto.partial();
 
 export type CreateCandidateDto = z.infer<typeof createCandidateDto>;
 export type UpdateCandidateDto = z.infer<typeof updateCandidateDto>;
+export type IngestCandidateDto = z.infer<typeof ingestCandidateDto>;

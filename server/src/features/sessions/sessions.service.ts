@@ -117,15 +117,15 @@ export class SessionsService {
 
   async findAll(createdBy: string) {
     const sessions = await Session.find({ createdBy })
-      .populate('jobId', 'title experienceLevel')
+      .populate('jobId', 'title experienceLevel location remote status')
       .sort({ createdAt: -1 });
     return sessions;
   }
 
   async findOne(sessionId: string, createdBy: string) {
     const session = await Session.findOne({ _id: sessionId, createdBy })
-      .populate('jobId', 'title experienceLevel location')
-      .populate('candidateIds', 'fullName email headline location');
+      .populate('jobId', 'title experienceLevel location remote status')
+      .populate('candidateIds', 'firstName lastName email headline location');
     if (!session) throw new AppError('Session not found', 404);
     return session;
   }

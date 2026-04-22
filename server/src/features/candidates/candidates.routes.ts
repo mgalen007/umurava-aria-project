@@ -17,8 +17,7 @@ router.get('/:id', controller.findOne);
 router.patch('/:id', validate(updateCandidateDto), controller.update);
 router.delete('/:id', controller.remove);
 
-// Chore: Add file ingestion later
-// router.post('/ingest/pdf', upload.array('resumes', 50), controller.ingestPDFs);
-// router.post('/ingest/csv', upload.single('file'), controller.ingestCSV);
+router.post('/ingest/pdf', upload.array('resumes', 50), controller.ingestPDFs);
+router.post('/ingest/csv', upload.single('file'), controller.ingestCSV);
 
 export default router;
