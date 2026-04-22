@@ -74,7 +74,9 @@ const candidateFields = {
   socialLinks:    socialLinksDto.optional(),
 };
 
-export const ingestCandidateDto = z.object(candidateFields);
+const candidateBaseDto = z.object(candidateFields);
+
+export const ingestCandidateDto = candidateBaseDto;
 
 export const createCandidateDto = ingestCandidateDto.superRefine((data, ctx) => {
   if (data.skills.length === 0) {
@@ -110,7 +112,7 @@ export const createCandidateDto = ingestCandidateDto.superRefine((data, ctx) => 
   }
 });
 
-export const updateCandidateDto = createCandidateDto.partial();
+export const updateCandidateDto = candidateBaseDto.partial();
 
 export type CreateCandidateDto = z.infer<typeof createCandidateDto>;
 export type UpdateCandidateDto = z.infer<typeof updateCandidateDto>;

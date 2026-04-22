@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { notFound } from 'next/navigation';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Eye, PencilLine } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { SessionResultsPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { getApplicantCvUrl, getJobApplicant, getSessionResults } from '@/lib/mock-data';
+import { ApiError, api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { buildCandidateCvUrl, formatSessionStatus, getCandidateName } from '@/lib/helpers';
+import type { Candidate, RankedResult, Session } from '@/lib/types';
 import './results.css';
 
 function scoreTone(scorePercent: number): 'green' | 'orange' | 'red' {
@@ -20,97 +22,115 @@ export default function ScreeningSessionPage({
 }: {
   params: { jobId: string; sessionId: string };
 }) {
-  const data = getSessionResults(params.jobId, params.sessionId);
-  if (!data) {
-    notFound();
-  }
-
-  const [selectedCandidateId, setSelectedCandidateId] = useState(data.topCandidates[0]?.id ?? '');
+  const { token } = useAuth();
+  const [session, setSession] = useState<Session | null>(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState('');
   const [isOverrideMode, setIsOverrideMode] = useState(false);
   const [manualScore, setManualScore] = useState('');
   const [comment, setComment] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const activeCandidate = useMemo(() => {
-    const applicant = getJobApplicant(params.jobId, selectedCandidateId);
-    return applicant;
-  }, [params.jobId, selectedCandidateId]);
+  useEffect(() => {
+    if (!token) return;
 
-  const featuredScore = data.topCandidates.find((candidate) => candidate.id === selectedCandidateId)?.scorePercent ?? data.featured.scorePercent;
+    api.getSession(params.sessionId, token)
+      .then((result) => {
+        setSession(result);
+        setSelectedCandidateId(result.rankedResults[0]?.candidateId ?? '');
+      })
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load session results.'));
+  }, [params.sessionId, token]);
 
-  if (!activeCandidate) {
-    notFound();
-  }
+  const candidates = useMemo(() => {
+    return (session?.candidateIds ?? []).filter((item): item is Candidate => typeof item !== 'string');
+  }, [session]);
 
-  const currentCandidate = activeCandidate;
+  const rankedResults = useMemo(() => {
+    return [...(session?.rankedResults ?? [])].sort((a, b) => a.rank - b.rank);
+  }, [session]);
 
-  const activeAnalysis = useMemo(() => {
-    const strengths = [
-      `${currentCandidate.yearsExperience}+ years of relevant experience for ${data.jobTitle}.`,
-      `Strong skill alignment across ${currentCandidate.skills.slice(0, 2).join(' and ')}.`,
-      `${currentCandidate.stage} candidate with a current system score of ${featuredScore}%.`,
-    ];
+  const activeResult = rankedResults.find((result) => result.candidateId === selectedCandidateId) ?? rankedResults[0];
+  const activeCandidate = candidates.find((candidate) => candidate._id === activeResult?.candidateId) ?? candidates[0];
 
-    const gaps = [
-      currentCandidate.matchScore < 80
-        ? 'Needs closer manual review before moving deeper into the process.'
-        : 'Still needs a recruiter sanity-check before final advancement.',
-      currentCandidate.source === 'Careers page'
-        ? 'Limited referral context available from the source pipeline.'
-        : 'Additional reference context could improve confidence in the profile.',
-    ];
+  async function submitFeedback(action: 'approved' | 'overridden') {
+    if (!token || !activeResult) return;
 
-    return { strengths, gaps };
-  }, [currentCandidate, data.jobTitle, featuredScore]);
-
-  function handleConfirm() {
-    if (isOverrideMode) {
-      const nextScore = manualScore.trim() || String(featuredScore);
-      setStatusMessage(
-        `Manual review saved for ${currentCandidate.fullName} with score ${nextScore}%${comment.trim() ? ' and admin notes.' : '.'}`
+    try {
+      const updatedSession = await api.submitSessionFeedback(
+        params.sessionId,
+        {
+          candidateId: activeResult.candidateId,
+          action,
+          adjustedScore: action === 'overridden' ? Number(manualScore || activeResult.finalScore) : undefined,
+          reason: comment.trim() || undefined,
+        },
+        token
       );
-      return;
-    }
 
-    setStatusMessage(`AI screening result confirmed for ${currentCandidate.fullName}.`);
+      setSession(updatedSession);
+      setStatusMessage(
+        action === 'overridden'
+          ? `Manual review saved for ${activeCandidate ? getCandidateName(activeCandidate) : 'candidate'}.`
+          : `AI screening result confirmed for ${activeCandidate ? getCandidateName(activeCandidate) : 'candidate'}.`
+      );
+    } catch (err) {
+      setStatusMessage(err instanceof ApiError ? err.message : 'Unable to save feedback.');
+    }
   }
+
+  if (!session || !activeResult || !activeCandidate) {
+    return (
+      <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
+        <div className="page-container screening-session-page">
+          {error ? <p>{error}</p> : null}
+        </div>
+      </PageSkeletonGate>
+    );
+  }
+
+  const featuredScore = activeResult.finalScore;
+  const jobTitle = typeof session.jobId === 'string' ? 'Job' : session.jobId.title;
 
   return (
     <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
       <div className="page-container screening-session-page">
-        <DashboardTopBar breadcrumbs={['Screenings', `${data.sessionLabel} / ${data.jobTitle}`]} />
+        <DashboardTopBar breadcrumbs={['Screenings', `${session.name} / ${jobTitle}`]} />
 
         <div className="session-results-heading">
-          <h1 className="session-results-title">{data.pageTitle}</h1>
-          <p className="session-results-summary">{data.summaryLine}</p>
+          <h1 className="session-results-title">{jobTitle}</h1>
+          <p className="session-results-summary">
+            {formatSessionStatus(session.status)} session • {session.candidateIds.length} candidates • {new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(session.createdAt))}
+          </p>
         </div>
 
         <div className="session-results-grid">
           <aside className="session-results-sidebar">
             <div className="session-results-sidebar__header">
-              <h2 className="session-results-section-title">Top 10 candidates</h2>
-              <p className="session-results-sidebar__hint">Ranked from strongest fit to weakest fit in the scanned batch.</p>
+              <h2 className="session-results-section-title">Ranked candidates</h2>
+              <p className="session-results-sidebar__hint">Review the latest AI rankings and recruiter feedback.</p>
             </div>
 
             <div className="session-results-candidate-list">
-              {data.topCandidates.map((candidate, index) => {
-                const tone = scoreTone(candidate.scorePercent);
-                const isActive = candidate.id === selectedCandidateId;
+              {rankedResults.map((result, index) => {
+                const candidate = candidates.find((item) => item._id === result.candidateId);
+                const tone = scoreTone(result.finalScore);
+                const isActive = result.candidateId === selectedCandidateId;
 
                 return (
                   <button
                     type="button"
-                    key={candidate.id}
+                    key={result.candidateId}
                     className={`session-results-candidate-row ${isActive ? 'is-active' : ''}`}
                     onClick={() => {
-                      setSelectedCandidateId(candidate.id);
+                      setSelectedCandidateId(result.candidateId);
                       setStatusMessage(null);
                     }}
                   >
                     <span className="session-results-candidate-rank">{index + 1}.</span>
-                    <span className="session-results-candidate-name">{candidate.name}</span>
+                    <span className="session-results-candidate-name">{candidate ? getCandidateName(candidate) : 'Candidate'}</span>
                     <span className={`session-results-candidate-score session-results-candidate-score--${tone}`}>
-                      {candidate.scorePercent}%
+                      {result.finalScore}%
                     </span>
                   </button>
                 );
@@ -121,13 +141,13 @@ export default function ScreeningSessionPage({
           <section className="session-results-main">
             <div className="session-results-profile">
               <div className="session-results-profile__identity">
-                <div className="session-results-avatar">{currentCandidate.fullName.charAt(0)}</div>
+                <div className="session-results-avatar">{getCandidateName(activeCandidate).charAt(0)}</div>
                 <div>
-                  <h2 className="session-results-profile__name">{currentCandidate.fullName}</h2>
+                  <h2 className="session-results-profile__name">{getCandidateName(activeCandidate)}</h2>
                   <p className="session-results-profile__meta">
-                    {currentCandidate.headline}
+                    {activeCandidate.headline}
                     <br />
-                    {currentCandidate.city}, {currentCandidate.country}
+                    {activeCandidate.location}
                   </p>
                 </div>
               </div>
@@ -138,9 +158,9 @@ export default function ScreeningSessionPage({
             </div>
 
             <div className="session-results-skill-badges">
-              {currentCandidate.skills.map((badge) => (
-                <span key={badge} className="session-results-skill-badge">
-                  {badge}
+              {activeCandidate.skills.map((badge) => (
+                <span key={badge.name} className="session-results-skill-badge">
+                  {badge.name}
                 </span>
               ))}
             </div>
@@ -151,7 +171,7 @@ export default function ScreeningSessionPage({
               <div className="session-results-analysis__header">
                 <h3 className="session-results-analysis__title">AI analysis</h3>
                 <a
-                  href={getApplicantCvUrl(currentCandidate)}
+                  href={buildCandidateCvUrl(activeCandidate)}
                   target="_blank"
                   rel="noreferrer"
                   className="session-results-file-pill session-results-file-pill--ghost"
@@ -165,7 +185,7 @@ export default function ScreeningSessionPage({
                 <div className="session-results-analysis__group">
                   <div className="session-results-analysis__label">Strengths</div>
                   <ul className="session-results-analysis__list">
-                    {activeAnalysis.strengths.map((item) => (
+                    {activeResult.strengths.map((item) => (
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
@@ -174,7 +194,7 @@ export default function ScreeningSessionPage({
                 <div className="session-results-analysis__group">
                   <div className="session-results-analysis__label">Gaps</div>
                   <ul className="session-results-analysis__list">
-                    {activeAnalysis.gaps.map((item) => (
+                    {activeResult.gaps.map((item) => (
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
@@ -200,6 +220,7 @@ export default function ScreeningSessionPage({
                     onClick={() => {
                       setIsOverrideMode(true);
                       setStatusMessage(null);
+                      setManualScore(String(activeResult.finalScore));
                     }}
                   >
                     <PencilLine size={15} />
@@ -209,7 +230,7 @@ export default function ScreeningSessionPage({
                   <button
                     type="button"
                     className="session-results-file-pill session-results-file-pill--confirm"
-                    onClick={handleConfirm}
+                    onClick={() => submitFeedback(isOverrideMode ? 'overridden' : 'approved')}
                   >
                     <CheckCircle2 size={15} />
                     Confirm

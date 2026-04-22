@@ -1,10 +1,14 @@
+'use client';
+
 import React from 'react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { SettingsPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { mockCurrentUser } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
+
   return (
     <PageSkeletonGate skeleton={<SettingsPageSkeleton />}>
       <div className="page-container">
@@ -15,10 +19,10 @@ export default function SettingsPage() {
             Profile
           </h2>
           <p className="text-body-sm" style={{ marginBottom: '0.5rem' }}>
-            <strong>Name:</strong> {mockCurrentUser.name}
+            <strong>Name:</strong> {user?.name ?? '—'}
           </p>
           <p className="text-body-sm">
-            <strong>Email:</strong> {mockCurrentUser.email}
+            <strong>Email:</strong> {user?.email ?? '—'}
           </p>
         </div>
       </div>

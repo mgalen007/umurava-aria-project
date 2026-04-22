@@ -1,19 +1,35 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Eye, Search, X } from 'lucide-react';
+import { Eye, Search, UploadCloud, X } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { CandidatesPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { getApplicantCvUrl, getCandidateDirectoryEntries, type CandidateDirectoryEntry } from '@/lib/mock-data';
+import { ApiError, api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { buildCandidateCvUrl, getCandidateName, getCandidateYearsExperience } from '@/lib/helpers';
+import type { Candidate } from '@/lib/types';
 import './candidates.css';
 
 export default function CandidatesPage() {
-  const [selected, setSelected] = useState<CandidateDirectoryEntry | null>(null);
+  const { token } = useAuth();
+  const [selected, setSelected] = useState<Candidate | null>(null);
   const [query, setQuery] = useState('');
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement | null>(null);
+  const csvInputRef = useRef<HTMLInputElement | null>(null);
 
-  const candidates = useMemo(() => getCandidateDirectoryEntries(), []);
+  useEffect(() => {
+    if (!token) return;
+
+    api.getCandidates(token)
+      .then(setCandidates)
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load candidates.'));
+  }, [token]);
 
   const filteredCandidates = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -21,16 +37,13 @@ export default function CandidatesPage() {
 
     return candidates.filter((candidate) =>
       [
-        candidate.applicantId,
-        candidate.fullName,
+        getCandidateName(candidate),
         candidate.email,
-        candidate.phone,
-        candidate.city,
-        candidate.country,
+        candidate.location,
         candidate.headline,
-        candidate.stage,
+        candidate.globalStatus,
         candidate.source,
-        ...candidate.applications.map((application) => application.jobTitle),
+        ...candidate.skills.map((skill) => skill.name),
       ].some((value) => value.toLowerCase().includes(normalizedQuery))
     );
   }, [candidates, query]);
@@ -46,6 +59,48 @@ export default function CandidatesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
 
+  async function refreshCandidates() {
+    if (!token) return;
+    const next = await api.getCandidates(token);
+    setCandidates(next);
+  }
+
+  async function handleCsvUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !token) return;
+
+    setIsUploading(true);
+    setUploadStatus(null);
+    try {
+      const result = await api.ingestCandidateCsv(file, token);
+      await refreshCandidates();
+      setUploadStatus(`Imported ${result.succeeded.length} candidate(s). ${result.failed.length} failed.`);
+    } catch (err) {
+      setUploadStatus(err instanceof ApiError ? err.message : 'Unable to import CSV.');
+    } finally {
+      setIsUploading(false);
+      event.target.value = '';
+    }
+  }
+
+  async function handlePdfUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = event.target.files;
+    if (!files?.length || !token) return;
+
+    setIsUploading(true);
+    setUploadStatus(null);
+    try {
+      const result = await api.ingestCandidatePdfs(files, token);
+      await refreshCandidates();
+      setUploadStatus(`Imported ${result.succeeded.length} resume(s). ${result.failed.length} failed.`);
+    } catch (err) {
+      setUploadStatus(err instanceof ApiError ? err.message : 'Unable to import resumes.');
+    } finally {
+      setIsUploading(false);
+      event.target.value = '';
+    }
+  }
+
   return (
     <PageSkeletonGate skeleton={<CandidatesPageSkeleton />}>
       <div className="page-container candidates-page">
@@ -55,9 +110,9 @@ export default function CandidatesPage() {
           <div className="candidates-header">
             <div>
               <p className="candidates-eyebrow">Candidate directory</p>
-              <h1 className="candidates-heading">Candidates across all job applications</h1>
+              <h1 className="candidates-heading">Candidates across your workspace</h1>
               <p className="candidates-subtitle">
-                Monitor who applied, where they applied, their current stage, and the strongest profiles ready for screening or follow-up.
+                Browse imported talent, upload fresh resumes, and review profiles ready for screening.
               </p>
             </div>
 
@@ -73,7 +128,7 @@ export default function CandidatesPage() {
               <input
                 type="search"
                 className="candidates-search__input"
-                placeholder="Search by name, applicant ID, email, source, stage, or job"
+                placeholder="Search by name, email, location, source, status, or skill"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -83,11 +138,25 @@ export default function CandidatesPage() {
               <span className="candidates-toolbar__meta">
                 Showing {filteredCandidates.length} of {candidates.length}
               </span>
+              <button type="button" className="candidates-action-btn" onClick={() => pdfInputRef.current?.click()} disabled={isUploading}>
+                <UploadCloud size={16} />
+                Upload PDFs
+              </button>
+              <button type="button" className="candidates-action-btn" onClick={() => csvInputRef.current?.click()} disabled={isUploading}>
+                <UploadCloud size={16} />
+                Import CSV
+              </button>
               <Link href="/dashboard/jobs" className="candidates-action-btn">
                 View jobs
               </Link>
             </div>
           </div>
+
+          <input ref={pdfInputRef} type="file" accept=".pdf,application/pdf" multiple hidden onChange={handlePdfUpload} />
+          <input ref={csvInputRef} type="file" accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden onChange={handleCsvUpload} />
+
+          {error ? <div className="candidates-empty">{error}</div> : null}
+          {uploadStatus ? <div className="candidates-empty">{uploadStatus}</div> : null}
 
           <div className="candidates-table-shell">
             <div className="candidates-table-meta">
@@ -98,26 +167,22 @@ export default function CandidatesPage() {
               <table className="candidates-table">
                 <thead>
                   <tr>
-                    <th>Applicant ID</th>
                     <th>Candidate</th>
-                    <th>Applied jobs</th>
                     <th>Location</th>
-                    <th>Stage</th>
-                    <th>Match</th>
+                    <th>Status</th>
+                    <th>Experience</th>
                     <th>Source</th>
+                    <th>Top skills</th>
                     <th className="candidates-table__action-col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCandidates.map((candidate) => (
-                    <tr key={candidate.id}>
-                      <td>
-                        <span className="candidate-applicant-id">{candidate.applicantId}</span>
-                      </td>
+                    <tr key={candidate._id}>
                       <td>
                         <div className="candidate-cell">
                           <div>
-                            <div className="candidate-name">{candidate.fullName}</div>
+                            <div className="candidate-name">{getCandidateName(candidate)}</div>
                             <div className="candidate-subline">{candidate.headline}</div>
                             <a href={`mailto:${candidate.email}`} className="candidate-link">
                               {candidate.email}
@@ -125,31 +190,29 @@ export default function CandidatesPage() {
                           </div>
                         </div>
                       </td>
+                      <td>{candidate.location}</td>
+                      <td>
+                        <span className={`candidate-stage candidate-stage--${candidate.globalStatus.toLowerCase()}`}>
+                          {candidate.globalStatus}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="candidate-score-pill">{getCandidateYearsExperience(candidate.experience)} yrs</span>
+                      </td>
+                      <td>{candidate.source}</td>
                       <td>
                         <div className="candidate-job-badges">
-                          {candidate.applications.map((application) => (
-                            <span key={`${candidate.id}-${application.jobId}`} className="candidate-job-badge">
-                              {application.jobTitle}
+                          {candidate.skills.slice(0, 3).map((skill) => (
+                            <span key={`${candidate._id}-${skill.name}`} className="candidate-job-badge">
+                              {skill.name}
                             </span>
                           ))}
                         </div>
                       </td>
-                      <td>
-                        {candidate.city}, {candidate.country}
-                      </td>
-                      <td>
-                        <span className={`candidate-stage candidate-stage--${candidate.stage.toLowerCase()}`}>
-                          {candidate.stage}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="candidate-score-pill">{candidate.matchScore}%</span>
-                      </td>
-                      <td>{candidate.source}</td>
                       <td className="candidates-table__action-col">
                         <div className="candidate-actions">
                           <a
-                            href={getApplicantCvUrl(candidate)}
+                            href={buildCandidateCvUrl(candidate)}
                             target="_blank"
                             rel="noreferrer"
                             className="candidate-secondary-btn"
@@ -161,7 +224,7 @@ export default function CandidatesPage() {
                             type="button"
                             className="candidate-primary-btn"
                             onClick={() => setSelected(candidate)}
-                            aria-expanded={selected?.id === candidate.id}
+                            aria-expanded={selected?._id === candidate._id}
                           >
                             Full details
                           </button>
@@ -172,7 +235,7 @@ export default function CandidatesPage() {
 
                   {filteredCandidates.length === 0 ? (
                     <tr>
-                      <td colSpan={8}>
+                      <td colSpan={7}>
                         <div className="candidates-empty">No candidates match your current search.</div>
                       </td>
                     </tr>
@@ -201,9 +264,9 @@ export default function CandidatesPage() {
               <div className="drawer-header">
                 <div>
                   <p className="drawer-eyebrow">Candidate details</p>
-                  <h2 className="drawer-title">{selected.fullName}</h2>
+                  <h2 className="drawer-title">{getCandidateName(selected)}</h2>
                   <p className="drawer-subtitle">
-                    {selected.headline} · {selected.city}, {selected.country}
+                    {selected.headline} • {selected.location}
                   </p>
                 </div>
                 <button type="button" className="drawer-close" onClick={closeDrawer} aria-label="Close profile">
@@ -213,11 +276,11 @@ export default function CandidatesPage() {
 
               <div className="drawer-body">
                 <div className="drawer-overview">
-                  <div className="drawer-score">{selected.matchScore}% match</div>
+                  <div className="drawer-score">{getCandidateYearsExperience(selected.experience)} yrs</div>
                   <div className="drawer-overview__meta">
-                    <span>{selected.yearsExperience} yrs experience</span>
                     <span>{selected.source}</span>
-                    <span>{selected.stage}</span>
+                    <span>{selected.globalStatus}</span>
+                    <span>{selected.availability.status}</span>
                   </div>
                 </div>
 
@@ -227,45 +290,28 @@ export default function CandidatesPage() {
                     <a href={`mailto:${selected.email}`} className="candidate-link">
                       {selected.email}
                     </a>
-                    <a href={`tel:${selected.phone.replace(/\s+/g, '')}`} className="candidate-link">
-                      {selected.phone}
-                    </a>
-                    <span>
-                      {selected.city}, {selected.country}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="drawer-section">
-                  <h3 className="drawer-section__title">Applied roles</h3>
-                  <div className="drawer-applied-jobs">
-                    {selected.applications.map((application) => (
-                      <div key={`${selected.id}-${application.jobId}`} className="drawer-job-card">
-                        <strong>{application.jobTitle}</strong>
-                        <span>Applied on {application.appliedAt}</span>
-                      </div>
-                    ))}
+                    <span>{selected.location}</span>
                   </div>
                 </div>
 
                 <div className="drawer-section">
                   <h3 className="drawer-section__title">Summary</h3>
-                  <p className="drawer-summary">{selected.summary}</p>
+                  <p className="drawer-summary">{selected.bio ?? 'No summary available for this candidate yet.'}</p>
                 </div>
 
                 <div className="drawer-section">
                   <h3 className="drawer-section__title">Skills</h3>
                   <div className="skill-badges-belt">
                     {selected.skills.map((skill) => (
-                      <span key={skill} className="badge-purple">
-                        {skill}
+                      <span key={skill.name} className="badge-purple">
+                        {skill.name}
                       </span>
                     ))}
                   </div>
                 </div>
 
                 <a
-                  href={getApplicantCvUrl(selected)}
+                  href={buildCandidateCvUrl(selected)}
                   target="_blank"
                   rel="noreferrer"
                   className="drawer-cv-btn"

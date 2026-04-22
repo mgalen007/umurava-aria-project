@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, Home, Briefcase, ClipboardList, Settings, Headphones, Users } from 'lucide-react';
-import { mockCurrentUser } from '@/lib/mock-data';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, Home, Briefcase, ClipboardList, Settings, LogOut, Users } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 import './dashboard.css';
 
 function stringToColor(str: string) {
@@ -43,6 +43,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const { user, isLoading, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
@@ -72,6 +74,16 @@ export default function DashboardLayout({
     }
     return pathname.startsWith(path);
   };
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace('/login');
+    }
+  }, [isLoading, router, user]);
+
+  if (isLoading || !user) {
+    return <main className="main-content" />;
+  }
 
   return (
     <div className={`dashboard-wrapper ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -133,10 +145,10 @@ export default function DashboardLayout({
 
         <div className="sidebar-bottom">
           <div className="admin-profile">
-            <Avatar name={mockCurrentUser.name} />
+            <Avatar name={user.name} />
             <div className="admin-info">
-              <span className="admin-name">{mockCurrentUser.name}</span>
-              <span className="admin-email">{mockCurrentUser.email}</span>
+              <span className="admin-name">{user.name}</span>
+              <span className="admin-email">{user.email}</span>
             </div>
           </div>
 
@@ -149,10 +161,17 @@ export default function DashboardLayout({
               <Settings size={20} className="nav-icon" />
               <span className="nav-label">Settings</span>
             </Link>
-            <Link href="#" className="nav-item">
-              <Headphones size={20} className="nav-icon" />
-              <span className="nav-label">Help Center</span>
-            </Link>
+            <button
+              type="button"
+              className="nav-item"
+              onClick={() => {
+                logout();
+                router.replace('/login');
+              }}
+            >
+              <LogOut size={20} className="nav-icon" />
+              <span className="nav-label">Logout</span>
+            </button>
           </nav>
         </div>
       </aside>

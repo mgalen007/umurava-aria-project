@@ -1,34 +1,84 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { ScreeningsPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { mockScreeningFilters, mockScreeningMetrics, mockScreeningTableRows } from '@/lib/mock-data';
+import { ApiError, api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { formatRelativeDate, formatSessionStatus, getJobId, getJobTitle } from '@/lib/helpers';
+import type { Session } from '@/lib/types';
 import './screenings.css';
 
 const PAGE_SIZE = 5;
 
 export default function ScreeningsPage() {
+  const { token } = useAuth();
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [query, setQuery] = useState('');
-  const [jobFilter, setJobFilter] = useState(mockScreeningFilters.jobOptions[0]?.value ?? 'all');
-  const [statusFilter, setStatusFilter] = useState(mockScreeningFilters.statusOptions[0]?.value ?? 'all');
+  const [jobFilter, setJobFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    api.getSessions(token)
+      .then(setSessions)
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load screening sessions.'));
+  }, [token]);
+
+  const jobOptions = useMemo(() => {
+    const entries = new Map<string, string>();
+    sessions.forEach((session) => entries.set(getJobId(session), getJobTitle(session)));
+    return [{ label: 'Job', value: 'all' }, ...Array.from(entries.entries()).map(([value, label]) => ({ label, value }))];
+  }, [sessions]);
+
+  const statusOptions = [
+    { label: 'All status', value: 'all' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Running', value: 'processing' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Failed', value: 'failed' },
+  ];
 
   const filteredRows = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return mockScreeningTableRows.filter((row) => {
+    return sessions.filter((session) => {
+      const jobTitle = getJobTitle(session);
       const matchesQuery =
         normalizedQuery.length === 0 ||
-        row.jobTitle.toLowerCase().includes(normalizedQuery) ||
-        row.sessionLabel.toLowerCase().includes(normalizedQuery);
-      const matchesJob = jobFilter === 'all' || row.jobId === jobFilter;
-      const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
+        jobTitle.toLowerCase().includes(normalizedQuery) ||
+        session.name.toLowerCase().includes(normalizedQuery);
+      const matchesJob = jobFilter === 'all' || getJobId(session) === jobFilter;
+      const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
       return matchesQuery && matchesJob && matchesStatus;
     });
-  }, [jobFilter, query, statusFilter]);
+  }, [jobFilter, query, sessions, statusFilter]);
+
+  const metrics = useMemo(() => {
+    const candidatesScreened = sessions.reduce((total, session) => total + session.candidateIds.length, 0);
+    const completed = sessions.filter((session) => session.status === 'completed');
+    const avgTopScore = completed.length
+      ? Math.round(
+          completed.reduce((total, session) => total + (session.rankedResults[0]?.finalScore ?? 0), 0) / completed.length
+        )
+      : 0;
+    const overrides = completed.reduce(
+      (total, session) => total + session.rankedResults.filter((result) => result.feedbackStatus === 'overridden').length,
+      0
+    );
+
+    return [
+      { label: 'Total sessions run', value: String(sessions.length) },
+      { label: 'Candidates screened', value: String(candidatesScreened) },
+      { label: 'Avg top score', value: `${avgTopScore}%` },
+      { label: 'Sessions with overrides', value: String(overrides) },
+    ];
+  }, [sessions]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -52,7 +102,7 @@ export default function ScreeningsPage() {
         <DashboardTopBar breadcrumbs={['Screenings']} />
 
         <div className="screenings-metrics-grid">
-          {mockScreeningMetrics.map((metric) => (
+          {metrics.map((metric) => (
             <article className="screenings-metric-card" key={metric.label}>
               <h2 className="screenings-metric-value">{metric.value}</h2>
               <p className="screenings-metric-label">{metric.label}</p>
@@ -70,7 +120,7 @@ export default function ScreeningsPage() {
                 <input
                   type="search"
                   className="screenings-search__input"
-                  placeholder={mockScreeningFilters.searchPlaceholder}
+                  placeholder="Search by job or session"
                   value={query}
                   onChange={(event) => handleFilterChange(setQuery, event.target.value)}
                 />
@@ -82,7 +132,7 @@ export default function ScreeningsPage() {
                   value={jobFilter}
                   onChange={(event) => handleFilterChange(setJobFilter, event.target.value)}
                 >
-                  {mockScreeningFilters.jobOptions.map((option) => (
+                  {jobOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -97,7 +147,7 @@ export default function ScreeningsPage() {
                   value={statusFilter}
                   onChange={(event) => handleFilterChange(setStatusFilter, event.target.value)}
                 >
-                  {mockScreeningFilters.statusOptions.map((option) => (
+                  {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -107,6 +157,8 @@ export default function ScreeningsPage() {
               </div>
             </div>
           </div>
+
+          {error ? <div className="screenings-empty">{error}</div> : null}
 
           <div className="screenings-table-shell">
             <div className="screenings-table-head">
@@ -120,32 +172,39 @@ export default function ScreeningsPage() {
             </div>
 
             <div className="screenings-table-body">
-              {paginatedRows.map((row) => (
-                <article className="screenings-row" key={`${row.jobId}-${row.sessionId}-${row.dateRun}`}>
-                  <div className="screenings-row__session">
-                    <span className="screenings-session-label">{row.sessionLabel}</span>
-                    <span className="screenings-session-title">{row.jobTitle}</span>
-                  </div>
-                  <div className="screenings-row__date">{row.dateRun}</div>
-                  <div className="screenings-row__number">{row.candidates}</div>
-                  <div>
-                    <span className={`screenings-score-pill screenings-score-pill--${row.topScoreClass}`}>{row.topScore}%</span>
-                  </div>
-                  <div className={`screenings-row__number ${row.overrides > 0 ? 'is-warning' : ''}`}>{row.overrides}</div>
-                  <div className={`screenings-status screenings-status--${row.status.toLowerCase()}`}>{row.status}</div>
-                  <div className="screenings-row__action">
-                    {row.status === 'Running' ? (
-                      <button type="button" className="screenings-action-btn screenings-action-btn--secondary">
-                        Cancel
-                      </button>
-                    ) : (
-                      <Link href={`/dashboard/jobs/${row.jobId}/session/${row.sessionId}`} className="screenings-action-btn">
-                        View results
-                      </Link>
-                    )}
-                  </div>
-                </article>
-              ))}
+              {paginatedRows.map((session) => {
+                const topScore = session.rankedResults[0]?.finalScore ?? 0;
+                const overrides = session.rankedResults.filter((result) => result.feedbackStatus === 'overridden').length;
+                const statusLabel = formatSessionStatus(session.status);
+                return (
+                  <article className="screenings-row" key={session._id}>
+                    <div className="screenings-row__session">
+                      <span className="screenings-session-label">{session.name}</span>
+                      <span className="screenings-session-title">{getJobTitle(session)}</span>
+                    </div>
+                    <div className="screenings-row__date">{formatRelativeDate(session.createdAt)}</div>
+                    <div className="screenings-row__number">{session.candidateIds.length}</div>
+                    <div>
+                      <span className={`screenings-score-pill screenings-score-pill--${topScore >= 80 ? 'green' : topScore >= 50 ? 'orange' : 'blue'}`}>
+                        {topScore}%
+                      </span>
+                    </div>
+                    <div className={`screenings-row__number ${overrides > 0 ? 'is-warning' : ''}`}>{overrides}</div>
+                    <div className={`screenings-status screenings-status--${session.status.toLowerCase()}`}>{statusLabel}</div>
+                    <div className="screenings-row__action">
+                      {session.status === 'processing' ? (
+                        <button type="button" className="screenings-action-btn screenings-action-btn--secondary" disabled>
+                          Running
+                        </button>
+                      ) : (
+                        <Link href={`/dashboard/jobs/${getJobId(session)}/session/${session._id}`} className="screenings-action-btn">
+                          View results
+                        </Link>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
 
               {paginatedRows.length === 0 ? <div className="screenings-empty">No screenings match your filters.</div> : null}
             </div>

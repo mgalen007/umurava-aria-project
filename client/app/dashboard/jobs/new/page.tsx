@@ -1,15 +1,17 @@
 'use client';
 
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { CreateJobPageSkeleton } from '@/components/skeletons/PageSkeletons';
+import { ApiError, api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import './create-job.css';
 
 const seniorityLevels = ['Junior', 'Mid', 'Senior', 'Lead'] as const;
 const employmentTypes = ['Full-time', 'Contract', 'Part time'] as const;
 const educationLevels = ['High school', 'Diploma', 'Bachelors', 'Masters', 'PhD'] as const;
 const draftStorageKey = 'aria-create-job-draft';
-const createdJobStorageKey = 'aria-created-job';
 
 type FormState = {
   jobTitle: string;
@@ -47,11 +49,14 @@ function sanitizeFormForStorage(form: FormState) {
 }
 
 export default function CreateJobPage() {
+  const router = useRouter();
+  const { token } = useAuth();
   const [form, setForm] = useState<FormState>(initialFormState);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [statusMessage, setStatusMessage] = useState('');
   const [statusTone, setStatusTone] = useState<'success' | 'error'>('success');
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const savedDraft = window.localStorage.getItem(draftStorageKey);
@@ -173,7 +178,7 @@ export default function CreateJobPage() {
     setStatusTone('success');
   }
 
-  function handleCreateJob(event: FormEvent<HTMLFormElement>) {
+  async function handleCreateJob(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     addSkill();
 
@@ -203,19 +208,48 @@ export default function CreateJobPage() {
       return;
     }
 
-    const createdJob = {
-      ...nextForm,
-      skills: nextSkills,
-      disqualifiers: filledDisqualifiers,
-      createdAt: new Date().toISOString(),
-    };
+    if (!token) {
+      setStatusMessage('You must be signed in to create a job.');
+      setStatusTone('error');
+      return;
+    }
 
-    window.localStorage.setItem(createdJobStorageKey, JSON.stringify(createdJob));
-    window.localStorage.removeItem(draftStorageKey);
-    setForm(initialFormState);
-    setErrors({});
-    setStatusMessage('Job form completed successfully. A local copy was saved in your browser.');
-    setStatusTone('success');
+    setIsSubmitting(true);
+
+    try {
+      const experienceLevel = nextForm.seniorityLevel.toLowerCase() === 'mid'
+        ? 'mid'
+        : nextForm.seniorityLevel.toLowerCase();
+
+      const job = await api.createJob(
+        {
+          title: nextForm.jobTitle.trim(),
+          department: 'General',
+          description: nextForm.description.trim(),
+          requiredSkills: nextSkills,
+          niceToHaveSkills: [],
+          experienceLevel,
+          minYearsExperience: Number(nextForm.experienceYears),
+          maxYearsExperience: undefined,
+          location: nextForm.location.trim() || 'Remote',
+          remote: nextForm.remote,
+          hardRequirements: filledDisqualifiers,
+        },
+        token
+      );
+
+      window.localStorage.removeItem(draftStorageKey);
+      setForm(initialFormState);
+      setErrors({});
+      setStatusMessage('Job created successfully.');
+      setStatusTone('success');
+      router.push(`/dashboard/jobs/${job._id}`);
+    } catch (err) {
+      setStatusMessage(err instanceof ApiError ? err.message : 'Unable to create job.');
+      setStatusTone('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -447,8 +481,8 @@ export default function CreateJobPage() {
               <button type="button" className="btn btn-secondary" onClick={handleSaveDraft}>
                 Save as draft
               </button>
-              <button type="submit" className="btn btn-primary">
-                Create new job
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create new job'}
               </button>
             </div>
           </form>

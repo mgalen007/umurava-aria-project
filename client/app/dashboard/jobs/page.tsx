@@ -1,13 +1,45 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowRight } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { JobsPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { mockJobOpenings } from '@/lib/mock-data';
+import { ApiError, api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { formatExperienceLevel, formatJobStatus } from '@/lib/helpers';
+import type { Job } from '@/lib/types';
 import './jobs.css';
 
 export default function JobsPage() {
+  const { token } = useAuth();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'status' | 'date'>('status');
+
+  useEffect(() => {
+    if (!token) return;
+
+    api.getJobs(token)
+      .then(setJobs)
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Unable to load jobs.');
+      });
+  }, [token]);
+
+  const sortedJobs = useMemo(() => {
+    const next = [...jobs];
+    if (sortBy === 'status') {
+      const order = { active: 0, draft: 1, closed: 2 };
+      next.sort((a, b) => order[a.status] - order[b.status]);
+      return next;
+    }
+
+    next.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    return next;
+  }, [jobs, sortBy]);
+
   return (
     <PageSkeletonGate skeleton={<JobsPageSkeleton />}>
       <div className="page-container">
@@ -19,10 +51,10 @@ export default function JobsPage() {
 
             <div className="jobs-toolbar__controls">
               <div className="jobs-sort-group">
-                <button className="jobs-sort-btn jobs-sort-btn--primary" type="button">
+                <button className="jobs-sort-btn jobs-sort-btn--primary" type="button" onClick={() => setSortBy('status')}>
                   Sort by Status <ArrowDown size={14} />
                 </button>
-                <button className="jobs-sort-btn" type="button">
+                <button className="jobs-sort-btn" type="button" onClick={() => setSortBy('date')}>
                   Sort by Date <ArrowDown size={14} />
                 </button>
               </div>
@@ -33,31 +65,31 @@ export default function JobsPage() {
             </div>
           </div>
 
+          {error ? <p>{error}</p> : null}
+
           <div className="jobs-grid">
-            {mockJobOpenings.map((job) => (
-              <article className="job-card" key={job.id}>
+            {sortedJobs.map((job) => (
+              <article className="job-card" key={job._id}>
                 <div className="job-card-header">
-                  <h2 className="job-title">
-                    {job.titleLine1}
-                    <br />
-                    {job.titleLine2}
-                  </h2>
-                  <span className={job.status === 'Draft' ? 'status-badge-draft' : 'status-badge-active'}>{job.status}</span>
+                  <h2 className="job-title">{job.title}</h2>
+                  <span className={job.status === 'draft' ? 'status-badge-draft' : 'status-badge-active'}>
+                    {formatJobStatus(job.status)}
+                  </span>
                 </div>
 
                 <p className="job-meta">
-                  {job.skillsSummary} â€¢ {job.level} â€¢ {job.workType} â€¢ {job.location}
+                  {job.requiredSkills.length} skills • {formatExperienceLevel(job.experienceLevel)} • {job.remote ? 'Remote' : 'On-site'} • {job.location}
                 </p>
 
                 <div className="job-card-footnote">
-                  <span className="badge-outline">{job.candidatesCount} candidates</span>
-                  <span className="screened-time">Last screened {job.lastScreened}</span>
+                  <span className="badge-outline">{job.niceToHaveSkills.length} nice-to-have</span>
+                  <span className="screened-time">Created {new Date(job.createdAt).toLocaleDateString()}</span>
                 </div>
 
                 <div className="job-card-divider" />
 
                 <div className="job-footer">
-                  <Link href={`/dashboard/jobs/${job.id}`} className="link-btn">
+                  <Link href={`/dashboard/jobs/${job._id}`} className="link-btn">
                     View job <ArrowRight size={16} />
                   </Link>
                 </div>

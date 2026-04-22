@@ -12,9 +12,20 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { ApplicationVolumePoint, ApplicationVolumeRange, ShortlistRolePoint } from '@/lib/mock-data';
-import { mockApplicationVolumeSeries, mockShortlistByRole } from '@/lib/mock-data';
 import './dashboard-charts.css';
+
+export type ApplicationVolumeRange = '7d' | '30d' | '90d';
+
+export type ApplicationVolumePoint = {
+  label: string;
+  candidates: number;
+};
+
+export type ShortlistRolePoint = {
+  abbrev: string;
+  roleTitle: string;
+  shortlisted: number;
+};
 
 const ACCENT = '#6b4eff';
 
@@ -57,9 +68,15 @@ function ShortlistTooltip({
   );
 }
 
-export function DashboardCharts() {
+export function DashboardCharts({
+  volumeSeries,
+  shortlistByRole,
+}: {
+  volumeSeries: Record<ApplicationVolumeRange, ApplicationVolumePoint[]>;
+  shortlistByRole: ShortlistRolePoint[];
+}) {
   const [volumeRange, setVolumeRange] = useState<ApplicationVolumeRange>('7d');
-  const volumeData = mockApplicationVolumeSeries[volumeRange];
+  const volumeData = volumeSeries[volumeRange];
 
   const areaMax = useMemo(() => {
     if (!volumeData.length) return 40;
@@ -140,7 +157,7 @@ export function DashboardCharts() {
         <p className="chart-subtitle">Top candidates shortlisted per job.</p>
         <div className="chart-recharts-wrap chart-recharts-wrap--bar">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={mockShortlistByRole} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
+            <BarChart data={shortlistByRole} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
               <CartesianGrid stroke="#e5e7eb" strokeDasharray="4 4" vertical={false} />
               <XAxis
                 dataKey="abbrev"

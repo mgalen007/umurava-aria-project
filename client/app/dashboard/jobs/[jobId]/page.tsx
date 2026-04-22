@@ -1,92 +1,109 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { Eye, FileSearch, PanelRightOpen, Search, Trash2, X } from 'lucide-react';
+import { Eye, FileSearch, PanelRightOpen, Search, X } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { ApplicantsPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { getJobDetail, type JobApplicant } from '@/lib/mock-data';
+import { ApiError, api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { buildCandidateCvUrl, formatRelativeDate, formatSessionStatus, getCandidateName, getJobId } from '@/lib/helpers';
+import type { Candidate, Job, Session } from '@/lib/types';
 import './applicants.css';
 
-function buildMockCvUrl(applicant: JobApplicant) {
-  const content = [
-    `${applicant.fullName} CV`,
-    `Applicant ID: ${applicant.applicantId}`,
-    `Email: ${applicant.email}`,
-    `Phone: ${applicant.phone}`,
-    `Location: ${applicant.city}, ${applicant.country}`,
-    '',
-    'This is a mock CV preview generated for the dashboard prototype.',
-  ].join('\n');
-
-  return `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`;
-}
-
 export default function JobApplicantsPage({ params }: { params: { jobId: string } }) {
-  const job = getJobDetail(params.jobId);
-  if (!job) {
-    notFound();
-  }
-
+  const { token } = useAuth();
+  const [job, setJob] = useState<Job | null>(null);
+  const [allCandidates, setAllCandidates] = useState<Candidate[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [applicants, setApplicants] = useState(job.applicants);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSessionsOpen, setIsSessionsOpen] = useState(false);
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+
+    Promise.all([api.getJob(params.jobId, token), api.getCandidates(token), api.getSessions(token)])
+      .then(([jobResult, candidatesResult, sessionsResult]) => {
+        setJob(jobResult);
+        setAllCandidates(candidatesResult);
+        setSessions(sessionsResult.filter((session) => getJobId(session) === params.jobId));
+      })
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load job workspace.'));
+  }, [params.jobId, token]);
 
   const filteredApplicants = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return applicants;
+    if (!query) return allCandidates;
 
-    return applicants.filter((applicant) =>
+    return allCandidates.filter((candidate) =>
       [
-        applicant.applicantId,
-        applicant.fullName,
-        applicant.email,
-        applicant.phone,
-        applicant.city,
-        applicant.country,
+        getCandidateName(candidate),
+        candidate.email,
+        candidate.location,
+        candidate.headline,
       ].some((value) => value.toLowerCase().includes(query))
     );
-  }, [applicants, searchQuery]);
+  }, [allCandidates, searchQuery]);
 
   const selectedCount = selectedIds.length;
-  const hasApplicants = applicants.length > 0;
+  const hasApplicants = allCandidates.length > 0;
   const hasFilteredApplicants = filteredApplicants.length > 0;
   const allVisibleSelected =
-    hasFilteredApplicants && filteredApplicants.every((applicant) => selectedIds.includes(applicant.id));
+    hasFilteredApplicants && filteredApplicants.every((candidate) => selectedIds.includes(candidate._id));
 
-  function toggleApplicantSelection(applicantId: string) {
+  function toggleApplicantSelection(candidateId: string) {
     setSelectedIds((current) =>
-      current.includes(applicantId) ? current.filter((id) => id !== applicantId) : [...current, applicantId]
+      current.includes(candidateId) ? current.filter((id) => id !== candidateId) : [...current, candidateId]
     );
   }
 
   function toggleSelectAllVisible() {
     if (allVisibleSelected) {
-      const visibleIds = new Set(filteredApplicants.map((applicant) => applicant.id));
+      const visibleIds = new Set(filteredApplicants.map((candidate) => candidate._id));
       setSelectedIds((current) => current.filter((id) => !visibleIds.has(id)));
       return;
     }
 
-    const merged = new Set([...selectedIds, ...filteredApplicants.map((applicant) => applicant.id)]);
+    const merged = new Set([...selectedIds, ...filteredApplicants.map((candidate) => candidate._id)]);
     setSelectedIds(Array.from(merged));
   }
 
-  function handleScreenSelected() {
-    if (selectedCount === 0) return;
-    setBannerMessage(`Screening queued for ${selectedCount} selected candidate${selectedCount > 1 ? 's' : ''}.`);
+  async function handleScreenSelected() {
+    if (selectedCount === 0 || !token) return;
+
+    setIsRunning(true);
+    try {
+      const session = await api.createSession(
+        {
+          jobId: params.jobId,
+          name: `Session ${new Date().toLocaleString()}`,
+          candidateIds: selectedIds,
+          modelUsed: 'gemini-1.5-flash',
+        },
+        token
+      );
+      await api.runSession(session._id, token);
+      const nextSessions = await api.getSessions(token);
+      setSessions(nextSessions.filter((item) => getJobId(item) === params.jobId));
+      setBannerMessage(`Screening started for ${selectedCount} candidate${selectedCount > 1 ? 's' : ''}.`);
+    } catch (err) {
+      setBannerMessage(err instanceof ApiError ? err.message : 'Unable to start screening.');
+    } finally {
+      setIsRunning(false);
+    }
   }
 
-  function handleRemoveSelected() {
-    if (selectedCount === 0) return;
-
-    const selectedIdSet = new Set(selectedIds);
-    setApplicants((current) => current.filter((applicant) => !selectedIdSet.has(applicant.id)));
-    setSelectedIds([]);
-    setBannerMessage(`Removed ${selectedCount} candidate${selectedCount > 1 ? 's' : ''} from this shortlist.`);
+  if (!job && !error) {
+    return (
+      <PageSkeletonGate skeleton={<ApplicantsPageSkeleton />}>
+        <div className="page-container applicants-page" />
+      </PageSkeletonGate>
+    );
   }
 
   return (
@@ -98,16 +115,16 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
           <div className="applicants-header">
             <div>
               <p className="applicants-eyebrow">Applicants workspace</p>
-              <h1 className="applicants-title">Candidate pipeline for {job.title}</h1>
+              <h1 className="applicants-title">Candidate pipeline for {job?.title ?? 'Job'}</h1>
               <p className="applicants-subtitle">
-                Review applicants, bulk-select strong profiles, and open previous screening sessions only when you need the context.
+                Select imported candidates, launch screening sessions, and review previous runs for this role.
               </p>
             </div>
 
             <div className="applicants-summary">
               <article className="applicants-summary-card">
-                <span className="applicants-summary-card__label">Applicants</span>
-                <strong className="applicants-summary-card__value">{applicants.length}</strong>
+                <span className="applicants-summary-card__label">Candidates</span>
+                <strong className="applicants-summary-card__value">{allCandidates.length}</strong>
               </article>
               <article className="applicants-summary-card">
                 <span className="applicants-summary-card__label">Selected</span>
@@ -122,7 +139,7 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
               <input
                 type="search"
                 className="applicants-search__input"
-                placeholder="Search by applicant ID, name, email, phone, or location"
+                placeholder="Search by name, email, headline, or location"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
@@ -133,20 +150,10 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
                 className="applicants-action-btn applicants-action-btn--secondary"
                 type="button"
                 onClick={handleScreenSelected}
-                disabled={selectedCount === 0}
+                disabled={selectedCount === 0 || isRunning}
               >
                 <FileSearch size={16} />
-                Scan selected
-              </button>
-
-              <button
-                className="applicants-action-btn applicants-action-btn--danger"
-                type="button"
-                onClick={handleRemoveSelected}
-                disabled={selectedCount === 0}
-              >
-                <Trash2 size={16} />
-                Remove selected
+                {isRunning ? 'Starting...' : 'Scan selected'}
               </button>
 
               <button
@@ -173,10 +180,12 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
             </div>
           ) : null}
 
+          {error ? <div className="applicants-empty">{error}</div> : null}
+
           <div className="applicants-table-shell">
             <div className="applicants-table-meta">
               <span>
-                Showing {filteredApplicants.length} of {applicants.length} applicant{applicants.length === 1 ? '' : 's'}
+                Showing {filteredApplicants.length} of {allCandidates.length} candidate{allCandidates.length === 1 ? '' : 's'}
               </span>
               <span>{selectedCount} selected</span>
             </div>
@@ -190,51 +199,43 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
                         type="checkbox"
                         checked={allVisibleSelected}
                         onChange={toggleSelectAllVisible}
-                        aria-label="Select all visible applicants"
+                        aria-label="Select all visible candidates"
                       />
                     </th>
-                    <th>Applicant ID</th>
-                    <th>Full name</th>
+                    <th>Name</th>
                     <th>Email address</th>
-                    <th>Phone number</th>
+                    <th>Headline</th>
                     <th>Location</th>
                     <th className="applicants-table__action-col">CV</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredApplicants.map((applicant) => {
-                    const isSelected = selectedIds.includes(applicant.id);
+                  {filteredApplicants.map((candidate) => {
+                    const isSelected = selectedIds.includes(candidate._id);
                     return (
-                      <tr key={applicant.id} className={isSelected ? 'is-selected' : ''}>
+                      <tr key={candidate._id} className={isSelected ? 'is-selected' : ''}>
                         <td className="applicants-table__checkbox-col">
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => toggleApplicantSelection(applicant.id)}
-                            aria-label={`Select ${applicant.fullName}`}
+                            onChange={() => toggleApplicantSelection(candidate._id)}
+                            aria-label={`Select ${getCandidateName(candidate)}`}
                           />
                         </td>
-                        <td>
-                          <span className="applicant-id-pill">{applicant.applicantId}</span>
-                        </td>
                         <td className="applicant-name-cell">
-                          <span className="applicant-name">{applicant.fullName}</span>
+                          <span className="applicant-name">{getCandidateName(candidate)}</span>
                         </td>
                         <td>
-                          <a href={`mailto:${applicant.email}`} className="applicant-link">
-                            {applicant.email}
+                          <a href={`mailto:${candidate.email}`} className="applicant-link">
+                            {candidate.email}
                           </a>
                         </td>
-                        <td>
-                          <a href={`tel:${applicant.phone.replace(/\s+/g, '')}`} className="applicant-link">
-                            {applicant.phone}
-                          </a>
-                        </td>
-                        <td>{applicant.city}, {applicant.country}</td>
+                        <td>{candidate.headline}</td>
+                        <td>{candidate.location}</td>
                         <td className="applicants-table__action-col">
                           <a
-                            href={buildMockCvUrl(applicant)}
+                            href={buildCandidateCvUrl(candidate)}
                             target="_blank"
                             rel="noreferrer"
                             className="cv-view-btn"
@@ -249,9 +250,9 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
 
                   {!hasApplicants ? (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={6}>
                         <div className="applicants-empty">
-                          No applicants have been added to this job yet.
+                          No candidates have been imported yet.
                         </div>
                       </td>
                     </tr>
@@ -259,9 +260,9 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
 
                   {hasApplicants && !hasFilteredApplicants ? (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={6}>
                         <div className="applicants-empty">
-                          No applicants match your current search.
+                          No candidates match your current search.
                         </div>
                       </td>
                     </tr>
@@ -290,37 +291,37 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
           </div>
 
           <div className="sessions-list">
-            {job.sessions.length === 0 ? (
+            {sessions.length === 0 ? (
               <div className="sessions-empty">
                 No screening sessions have been run for this role yet.
               </div>
             ) : (
-              job.sessions.map((session) => (
-                <article className="session-card" key={session.id}>
+              sessions.map((session) => (
+                <article className="session-card" key={session._id}>
                   <div className="session-card__top">
                     <div>
-                      <p className="session-card__label">Session {session.id.toUpperCase()}</p>
-                      <h3 className="session-card__date">{session.date}</h3>
+                      <p className="session-card__label">{session.name}</p>
+                      <h3 className="session-card__date">{formatRelativeDate(session.createdAt)}</h3>
                     </div>
-                    <span className={session.status === 'Pending' ? 'status-badge-draft' : 'status-badge-active'}>
-                      {session.status}
+                    <span className={session.status === 'pending' ? 'status-badge-draft' : 'status-badge-active'}>
+                      {formatSessionStatus(session.status)}
                     </span>
                   </div>
 
                   <div className="session-card__metrics">
                     <div className="session-card__metric">
                       <span className="session-card__metric-label">Candidates</span>
-                      <strong>{session.candidates}</strong>
+                      <strong>{session.candidateIds.length}</strong>
                     </div>
                     <div className="session-card__metric">
                       <span className="session-card__metric-label">Top score</span>
-                      <strong>{session.score}</strong>
+                      <strong>{session.rankedResults[0]?.finalScore ?? 0}%</strong>
                     </div>
                   </div>
 
                   <Link
-                    href={`/dashboard/jobs/${params.jobId}/session/${session.id}`}
-                    className={`session-link ${session.status === 'Pending' ? 'is-pending' : ''}`}
+                    href={`/dashboard/jobs/${params.jobId}/session/${session._id}`}
+                    className={`session-link ${session.status === 'pending' ? 'is-pending' : ''}`}
                     onClick={() => setIsSessionsOpen(false)}
                   >
                     View results

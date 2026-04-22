@@ -3,15 +3,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { DashboardJobRow, JobListStatus } from '@/lib/mock-data';
 import './dashboard-overview.css';
 
-export type StatusFilter = 'all' | 'active' | 'drafted';
+export type DashboardJobRow = {
+  id: string;
+  role: string;
+  dept: string;
+  status: 'Active' | 'Draft' | 'Closed';
+  matchScoreAvg: number | null;
+  highMatchedCandidate: string | null;
+  candidatesCount: number;
+  lastScreened: string;
+};
 
-function matchesStatusFilter(status: JobListStatus, filter: StatusFilter): boolean {
+export type StatusFilter = 'all' | 'active' | 'draft';
+
+function matchesStatusFilter(status: DashboardJobRow['status'], filter: StatusFilter): boolean {
   if (filter === 'all') return true;
   if (filter === 'active') return status === 'Active';
-  if (filter === 'drafted') return status === 'Drafted';
+  if (filter === 'draft') return status === 'Draft';
   return true;
 }
 
@@ -86,7 +96,7 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
               [
                 { id: 'all' as const, label: 'All' },
                 { id: 'active' as const, label: 'Active' },
-                { id: 'drafted' as const, label: 'Drafted' },
+                { id: 'draft' as const, label: 'Draft' },
               ] as const
             ).map(({ id, label }) => (
               <button
