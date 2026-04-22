@@ -19,6 +19,7 @@ export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [uploadFailures, setUploadFailures] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const csvInputRef = useRef<HTMLInputElement | null>(null);
@@ -71,12 +72,15 @@ export default function CandidatesPage() {
 
     setIsUploading(true);
     setUploadStatus(null);
+    setUploadFailures([]);
     try {
       const result = await api.ingestCandidateCsv(file, token);
       await refreshCandidates();
       setUploadStatus(`Imported ${result.succeeded.length} candidate(s). ${result.failed.length} failed.`);
+      setUploadFailures(result.failed);
     } catch (err) {
       setUploadStatus(err instanceof ApiError ? err.message : 'Unable to import CSV.');
+      setUploadFailures([]);
     } finally {
       setIsUploading(false);
       event.target.value = '';
@@ -89,12 +93,15 @@ export default function CandidatesPage() {
 
     setIsUploading(true);
     setUploadStatus(null);
+    setUploadFailures([]);
     try {
       const result = await api.ingestCandidatePdfs(files, token);
       await refreshCandidates();
       setUploadStatus(`Imported ${result.succeeded.length} resume(s). ${result.failed.length} failed.`);
+      setUploadFailures(result.failed);
     } catch (err) {
       setUploadStatus(err instanceof ApiError ? err.message : 'Unable to import resumes.');
+      setUploadFailures([]);
     } finally {
       setIsUploading(false);
       event.target.value = '';
@@ -156,7 +163,18 @@ export default function CandidatesPage() {
           <input ref={csvInputRef} type="file" accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden onChange={handleCsvUpload} />
 
           {error ? <div className="candidates-empty">{error}</div> : null}
-          {uploadStatus ? <div className="candidates-empty">{uploadStatus}</div> : null}
+          {uploadStatus ? (
+            <div className="candidates-empty">
+              <div>{uploadStatus}</div>
+              {uploadFailures.length > 0 ? (
+                <div style={{ marginTop: '0.75rem', textAlign: 'left' }}>
+                  {uploadFailures.map((failure, index) => (
+                    <div key={`${failure}-${index}`}>{failure}</div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="candidates-table-shell">
             <div className="candidates-table-meta">

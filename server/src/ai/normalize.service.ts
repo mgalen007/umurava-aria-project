@@ -1,4 +1,4 @@
-const pdfParse = require("pdf-parse");
+import { PDFParse } from "pdf-parse";
 import Papa from "papaparse";
 import ExcelJS from "exceljs";
 import { GoogleGenAI } from "@google/genai";
@@ -8,11 +8,14 @@ const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export class NormalizeService {
   async fromPDF(buffer: Buffer): Promise<IngestCandidateDto> {
-    const parsed = await pdfParse(buffer);
+    const parser = new PDFParse({ data: buffer });
+    const parsed = await parser.getText();
     const text = parsed.text;
 
+    await parser.destroy();
+
     const response = await genai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: [
         {
           role: "user",
@@ -172,12 +175,12 @@ Resume text:\n\n${text}`,
       experience: candidate.experience ?? [],
       education: candidate.education ?? [],
       certifications: candidate.certifications ?? [],
-      projects: candidate.projects ?? [],
+      projects: this.normalizeProjects(candidate.projects),
       availability: candidate.availability ?? {
         status: "Available" as const,
         type: "Full-time" as const,
       },
-      socialLinks: candidate.socialLinks,
+      socialLinks: this.normalizeSocialLinks(candidate.socialLinks),
     };
 
     return ingestCandidateDto.parse(normalized);
@@ -264,7 +267,7 @@ Resume text:\n\n${text}`,
       description: this.fallbackText(projectDescription, 'Imported from candidate ingestion'),
       technologies: this.splitList(row.skills),
       role: this.fallbackText(row.role, 'Contributor'),
-      link: row.portfolio ?? row.project_link ?? undefined,
+      link: this.normalizeUrl(row.portfolio ?? row.project_link),
       startDate: this.fallbackText(row.project_start_date ?? row.start_date, 'Unknown'),
       endDate: row.project_end_date ?? row.end_date ?? undefined,
     }];
@@ -279,12 +282,62 @@ Resume text:\n\n${text}`,
   }
 
   private buildSocialLinks(row: Record<string, string>) {
-    const socialLinks = {
-      linkedin: row.linkedin,
-      github: row.github,
-      portfolio: row.portfolio,
-    };
+    return this.toDefinedStringRecord({
+      linkedin: this.normalizeUrl(row.linkedin),
+      github: this.normalizeUrl(row.github),
+      portfolio: this.normalizeUrl(row.portfolio),
+    });
+  }
 
-    return Object.values(socialLinks).some(Boolean) ? socialLinks : undefined;
+  private normalizeProjects(projects: IngestCandidateDto['projects'] | undefined) {
+    if (!Array.isArray(projects)) return [];
+
+    return projects.map((project) => ({
+      name: this.fallbackText(project?.name, 'Imported Project'),
+      description: this.fallbackText(project?.description, 'Imported from resume'),
+      technologies: Array.isArray(project?.technologies)
+        ? project.technologies.filter((technology): technology is string => typeof technology === 'string' && technology.trim().length > 0)
+        : [],
+      role: this.fallbackText(project?.role, 'Contributor'),
+      link: this.normalizeUrl(project?.link),
+      startDate: this.fallbackText(project?.startDate, 'Unknown'),
+      endDate: project?.endDate?.trim() || undefined,
+    }));
+  }
+
+  private normalizeSocialLinks(socialLinks: IngestCandidateDto['socialLinks'] | undefined) {
+    if (!socialLinks) return undefined;
+
+    const normalized = this.toDefinedStringRecord(
+      Object.entries(socialLinks).map(
+        ([key, value]): [string, string | undefined] => [key, this.normalizeUrl(value)]
+      )
+    );
+
+    return normalized;
+  }
+
+  private normalizeUrl(value?: string) {
+    const raw = value?.trim();
+    if (!raw) return undefined;
+
+    const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+
+    try {
+      return new URL(candidate).toString();
+    } catch {
+      return undefined;
+    }
+  }
+
+  private toDefinedStringRecord(
+    input: Record<string, string | undefined> | Array<[string, string | undefined]>
+  ): Record<string, string> | undefined {
+    const entries = Array.isArray(input) ? input : Object.entries(input);
+    const normalized = Object.fromEntries(
+      entries.filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].length > 0)
+    );
+
+    return Object.keys(normalized).length > 0 ? normalized : undefined;
   }
 }

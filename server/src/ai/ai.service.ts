@@ -142,7 +142,7 @@ export class AIService {
     const prompt = this.buildPrompt(sessionId, job, candidates);
 
     const response = await genai.models.generateContent({
-      model:    'gemini-1.5-flash',
+      model:    'gemini-3.1-flash-lite-preview',
       contents: [{
         role:  'user',
         parts: [{ text: prompt }],
