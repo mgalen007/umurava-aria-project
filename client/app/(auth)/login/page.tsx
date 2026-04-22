@@ -2,6 +2,7 @@
 
 import React, { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { LoginPageSkeleton } from '@/components/skeletons/PageSkeletons';
@@ -109,6 +110,13 @@ export default function LoginPage() {
                   className="google-icon"
                 />
               </button>
+
+              <p className="login-switch">
+                Don&apos;t have an account?{' '}
+                <Link href="/register" className="login-link">
+                  Register
+                </Link>
+              </p>
             </form>
           </div>
         </div>
