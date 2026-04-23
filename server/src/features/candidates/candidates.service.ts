@@ -1,5 +1,7 @@
+import fs from 'fs/promises';
 import { Candidate } from './candidates.model';
 import { CreateCandidateDto, IngestCandidateDto, UpdateCandidateDto } from './candidates.dto';
+import { ICandidate } from './candidates.types';
 import { AppError } from '../../middleware/error';
 import { NormalizeService } from '../../ai/normalize.service'
 
@@ -66,41 +68,57 @@ export class CandidatesService {
   }
 
   async ingestPDFs(files: Express.Multer.File[], uploadedBy: string) {
-    const results = await Promise.allSettled(
-      files.map(async (file) => {
-        const data = await normalizeService.fromPDF(file.buffer);
-        return this.createCandidate(data, uploadedBy, 'pdf_resume');
-      })
-    );
+    const succeeded: ICandidate[] = [];
+    const failed: string[] = [];
 
-    const succeeded = results
-      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
-      .map((r) => r.value);
-
-    const failed = results
-      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-      .map((r) => r.reason?.message ?? 'Unknown error');
+    for (const file of files) {
+      try {
+        const buffer = await fs.readFile(file.path);
+        const data = await normalizeService.fromPDF(buffer);
+        const candidate = await this.createCandidate(data, uploadedBy, 'pdf_resume');
+        succeeded.push(candidate);
+      } catch (error) {
+        failed.push(error instanceof Error ? error.message : 'Unknown error');
+      } finally {
+        await this.cleanupUploadedFile(file.path);
+      }
+    }
 
     return { succeeded, failed };
   }
 
   async ingestCSV(file: Express.Multer.File, uploadedBy: string) {
-    const rows = file.mimetype === 'text/csv'
-      ? await normalizeService.fromCSV(file.buffer)
-      : await normalizeService.fromExcel(file.buffer);
+    try {
+      const buffer = await fs.readFile(file.path);
+      const rows = file.mimetype === 'text/csv'
+        ? await normalizeService.fromCSV(buffer)
+        : await normalizeService.fromExcel(buffer);
 
-    const results = await Promise.allSettled(
-      rows.map((data) => this.createCandidate(data, uploadedBy, 'csv_upload'))
-    );
+      const results = await Promise.allSettled(
+        rows.map((data) => this.createCandidate(data, uploadedBy, 'csv_upload'))
+      );
 
-    const succeeded = results
-      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
-      .map((r) => r.value);
+      const succeeded = results
+        .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+        .map((r) => r.value);
 
-    const failed = results
-      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-      .map((r) => r.reason?.message ?? 'Unknown error');
+      const failed = results
+        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+        .map((r) => r.reason?.message ?? 'Unknown error');
 
-    return { succeeded, failed };
+      return { succeeded, failed };
+    } finally {
+      await this.cleanupUploadedFile(file.path);
+    }
+  }
+
+  private async cleanupUploadedFile(filePath?: string) {
+    if (!filePath) return;
+
+    try {
+      await fs.unlink(filePath);
+    } catch {
+      // Ignore cleanup failures for already-removed temp files.
+    }
   }
 }

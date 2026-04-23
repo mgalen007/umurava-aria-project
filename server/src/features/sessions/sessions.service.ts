@@ -45,10 +45,29 @@ export class SessionsService {
   }
 
   async run(sessionId: string, createdBy: string) {
-    const session = await Session.findOne({ _id: sessionId, createdBy });
-    if (!session) throw new AppError('Session not found', 404);
-    if (session.status === 'processing') {
-      throw new AppError('Session is already running', 409);
+    const session = await Session.findOneAndUpdate(
+      {
+        _id: sessionId,
+        createdBy,
+        status: { $ne: 'processing' },
+      },
+      {
+        $set: {
+          status: 'processing',
+          error: undefined,
+          processingTimeMs: undefined,
+        },
+      },
+      { new: true }
+    );
+
+    if (!session) {
+      const existingSession = await Session.findOne({ _id: sessionId, createdBy }).select('status');
+      if (!existingSession) throw new AppError('Session not found', 404);
+      if (existingSession.status === 'processing') {
+        throw new AppError('Session is already running', 409);
+      }
+      throw new AppError('Unable to start screening session', 409);
     }
 
     const [job, candidates] = await Promise.all([
@@ -57,8 +76,6 @@ export class SessionsService {
     ]);
 
     if (!job) throw new AppError('Job not found', 404);
-
-    await session.updateOne({ status: 'processing' });
 
     this.runInBackground(session.id, job, candidates);
 

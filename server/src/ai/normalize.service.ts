@@ -6,6 +6,7 @@ import {
   ingestCandidateDto,
   IngestCandidateDto,
 } from "../features/candidates/candidates.dto";
+import { AppError } from "../middleware/error";
 
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -65,10 +66,13 @@ Resume text:\n\n${text}`,
       },
     });
 
-    const raw = response.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-    return this.normalizeCandidate(
-      JSON.parse(raw) as Partial<IngestCandidateDto>,
+    const raw = response.candidates?.[0]?.content?.parts?.[0]?.text;
+    const parsedCandidate = this.parseJsonResponse<Partial<IngestCandidateDto>>(
+      raw,
+      "Resume parsing failed because the AI response was empty or invalid JSON",
     );
+
+    return this.normalizeCandidate(parsedCandidate);
   }
 
   async fromCSV(buffer: Buffer): Promise<IngestCandidateDto[]> {
@@ -202,6 +206,19 @@ Resume text:\n\n${text}`,
     };
 
     return ingestCandidateDto.parse(normalized);
+  }
+
+  private parseJsonResponse<T>(raw: string | undefined, message: string): T {
+    const cleaned = this.cleanJsonResponse(raw);
+    if (!cleaned) {
+      throw new AppError(message, 502);
+    }
+
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch {
+      throw new AppError(message, 502);
+    }
   }
 
   private normalizeRow(row: Record<string, string>): Record<string, string> {
@@ -398,5 +415,15 @@ Resume text:\n\n${text}`,
     );
 
     return Object.keys(normalized).length > 0 ? normalized : undefined;
+  }
+
+  private cleanJsonResponse(raw?: string): string {
+    return (
+      raw
+        ?.replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/```\s*$/i, "")
+        .trim() ?? ""
+    );
   }
 }
