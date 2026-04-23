@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { IJob } from "../features/jobs/jobs.types";
 import { ICandidate } from "../features/candidates/candidates.types";
+import { AppError } from "../middleware/error";
 
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -159,7 +160,12 @@ export class AIService {
     });
 
     const raw = response.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) throw new Error("Empty response from Gemini");
+    if (!raw) {
+      throw new AppError(
+        "AI evaluation failed because the model returned an empty response",
+        502,
+      );
+    }
 
     return this.parse(raw);
   }
@@ -244,14 +250,48 @@ export class AIService {
   }
 
   private parse(raw: string): AIRankingResult {
-    try {
-      return JSON.parse(raw) as AIRankingResult;
-    } catch {
-      const cleaned = raw
-        .replace(/^```json\s*/i, "")
-        .replace(/```\s*$/i, "")
-        .trim();
-      return JSON.parse(cleaned) as AIRankingResult;
+    const cleaned = this.cleanJsonResponse(raw);
+    if (!cleaned) {
+      throw new AppError(
+        "AI evaluation failed because the model returned invalid JSON",
+        502,
+      );
     }
+
+    try {
+      return this.validateResult(JSON.parse(cleaned) as AIRankingResult);
+    } catch {
+      throw new AppError(
+        "AI evaluation failed because the model returned invalid JSON",
+        502,
+      );
+    }
+  }
+
+  private cleanJsonResponse(raw?: string): string {
+    return (
+      raw
+        ?.replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/```\s*$/i, "")
+        .trim() ?? ""
+    );
+  }
+
+  private validateResult(result: AIRankingResult): AIRankingResult {
+    if (
+      !result ||
+      typeof result.session_id !== "string" ||
+      !Array.isArray(result.rankings) ||
+      !result.batch_summary ||
+      typeof result.batch_summary !== "object"
+    ) {
+      throw new AppError(
+        "AI evaluation failed because the model returned an incomplete JSON payload",
+        502,
+      );
+    }
+
+    return result;
   }
 }

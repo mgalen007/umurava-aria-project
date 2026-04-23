@@ -3,10 +3,20 @@ import mongoose from 'mongoose';
 import app from './app';
 
 const PORT = process.env.PORT ?? 4000;
-const MONGODB_URI = process.env.MONGODB_URI!;
+
+function getRequiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} is required to start the server`);
+  }
+  return value;
+}
 
 async function bootstrap() {
-  await mongoose.connect(MONGODB_URI);
+  const mongoUri = getRequiredEnv('MONGODB_URI');
+  getRequiredEnv('JWT_SECRET');
+
+  await mongoose.connect(mongoUri);
   console.log('Connected to MongoDB');
 
   app.listen(PORT, () => {
