@@ -171,7 +171,7 @@ export type Session = {
   >;
   rankedResults: RankedResult[];
   batchSummary?: BatchSummary;
-  modelUsed: 'gemini-1.5-flash' | 'gemini-1.5-pro';
+  modelUsed: 'gemini-3.1-flash-lite-preview' | 'gemini-1.5-pro';
   promptVersion: string;
   processingTimeMs?: number;
   error?: string;

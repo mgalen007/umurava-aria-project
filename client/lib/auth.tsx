@@ -10,6 +10,13 @@ type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
+  register: (payload: {
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
   login: (identifier: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -47,6 +54,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(response.user);
   }
 
+  async function register(payload: {
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+    password: string;
+  }) {
+    const response = await api.register(payload);
+    window.localStorage.setItem(AUTH_TOKEN_KEY, response.token);
+    setToken(response.token);
+    setUser(response.user);
+  }
+
   function logout() {
     window.localStorage.removeItem(AUTH_TOKEN_KEY);
     setToken(null);
@@ -66,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     token,
     isLoading,
+    register,
     login,
     logout,
     refreshUser,

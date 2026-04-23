@@ -69,6 +69,18 @@ async function request<T>(path: string, options: RequestOptions = {}) {
 }
 
 export const api = {
+  register: (payload: {
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+    password: string;
+  }) =>
+    request<AuthResponse>('/auth/register', {
+      method: 'POST',
+      body: payload,
+    }),
+
   login: (identifier: string, password: string) =>
     request<AuthResponse>('/auth/login', {
       method: 'POST',

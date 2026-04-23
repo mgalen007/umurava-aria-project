@@ -83,7 +83,7 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
           jobId: params.jobId,
           name: `Session ${new Date().toLocaleString()}`,
           candidateIds: selectedIds,
-          modelUsed: 'gemini-1.5-flash',
+          modelUsed: 'gemini-3.1-flash-lite-preview',
         },
         token
       );
