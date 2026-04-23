@@ -1,10 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api';
 import type { AuthUser } from './types';
 
 const AUTH_TOKEN_KEY = 'aria_auth_token';
+let bootstrappedToken: string | null = null;
+let bootstrappedUserPromise: Promise<AuthUser> | null = null;
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -28,6 +30,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const requestVersionRef = useRef(0);
+
+  function nextRequestVersion() {
+    requestVersionRef.current += 1;
+    return requestVersionRef.current;
+  }
+
+  function isCurrentRequest(version: number) {
+    return requestVersionRef.current === version;
+  }
+
+  function persistAuth(nextToken: string, nextUser: AuthUser) {
+    bootstrappedToken = nextToken;
+    bootstrappedUserPromise = Promise.resolve(nextUser);
+    window.localStorage.setItem(AUTH_TOKEN_KEY, nextToken);
+    setToken(nextToken);
+    setUser(nextUser);
+  }
+
+  function clearAuth() {
+    bootstrappedToken = null;
+    bootstrappedUserPromise = null;
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+    setToken(null);
+    setUser(null);
+  }
+
+  function getBootstrappedUser(tokenToLoad: string) {
+    if (bootstrappedToken !== tokenToLoad || !bootstrappedUserPromise) {
+      bootstrappedToken = tokenToLoad;
+      bootstrappedUserPromise = api.me(tokenToLoad);
+    }
+
+    return bootstrappedUserPromise;
+  }
 
   useEffect(() => {
     const savedToken = window.localStorage.getItem(AUTH_TOKEN_KEY);
@@ -36,22 +73,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const requestVersion = nextRequestVersion();
     setToken(savedToken);
-    api.me(savedToken)
-      .then(setUser)
-      .catch(() => {
-        window.localStorage.removeItem(AUTH_TOKEN_KEY);
-        setToken(null);
-        setUser(null);
+    getBootstrappedUser(savedToken)
+      .then((nextUser) => {
+        if (!isCurrentRequest(requestVersion)) return;
+        setUser(nextUser);
       })
-      .finally(() => setIsLoading(false));
+      .catch(() => {
+        if (!isCurrentRequest(requestVersion)) return;
+        clearAuth();
+      })
+      .finally(() => {
+        if (isCurrentRequest(requestVersion)) {
+          setIsLoading(false);
+        }
+      });
   }, []);
 
   async function login(identifier: string, password: string) {
+    const requestVersion = nextRequestVersion();
     const response = await api.login(identifier, password);
-    window.localStorage.setItem(AUTH_TOKEN_KEY, response.token);
-    setToken(response.token);
-    setUser(response.user);
+    if (!isCurrentRequest(requestVersion)) return;
+    persistAuth(response.token, response.user);
   }
 
   async function register(payload: {
@@ -61,16 +105,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string;
     password: string;
   }) {
+    const requestVersion = nextRequestVersion();
     const response = await api.register(payload);
-    window.localStorage.setItem(AUTH_TOKEN_KEY, response.token);
-    setToken(response.token);
-    setUser(response.user);
+    if (!isCurrentRequest(requestVersion)) return;
+    persistAuth(response.token, response.user);
   }
 
   function logout() {
-    window.localStorage.removeItem(AUTH_TOKEN_KEY);
-    setToken(null);
-    setUser(null);
+    nextRequestVersion();
+    clearAuth();
   }
 
   async function refreshUser() {
@@ -78,7 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       return;
     }
+    const requestVersion = nextRequestVersion();
     const me = await api.me(token);
+    if (!isCurrentRequest(requestVersion)) return;
     setUser(me);
   }
 

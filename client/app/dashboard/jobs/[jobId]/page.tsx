@@ -106,7 +106,29 @@ export default function JobApplicantsPage({
     );
   }, [allCandidates, searchQuery]);
 
+  const candidateIdSet = useMemo(
+    () => new Set(allCandidates.map((candidate) => candidate._id)),
+    [allCandidates],
+  );
+
+  useEffect(() => {
+    setSelectedIds((current) =>
+      current.filter((id) => candidateIdSet.has(id)),
+    );
+  }, [candidateIdSet]);
+
   const selectedCount = selectedIds.length;
+  const validSelectedIds = useMemo(
+    () =>
+      selectedIds.filter(
+        (id): id is string =>
+          typeof id === "string" &&
+          id.trim().length > 0 &&
+          candidateIdSet.has(id),
+      ),
+    [candidateIdSet, selectedIds],
+  );
+  const validSelectedCount = validSelectedIds.length;
   const hasApplicants = allCandidates.length > 0;
   const hasFilteredApplicants = filteredApplicants.length > 0;
   const allVisibleSelected =
@@ -140,14 +162,7 @@ export default function JobApplicantsPage({
   }
 
   async function handleScreenSelected() {
-    if (selectedCount === 0 || !token) return;
-
-    const validSelectedIds = selectedIds.filter(
-      (id): id is string =>
-        typeof id === "string" &&
-        id.trim().length > 0 &&
-        allCandidates.some((candidate) => candidate._id === id),
-    );
+    if (validSelectedCount === 0 || !token) return;
 
     if (validSelectedIds.length === 0) {
       setBannerFailures([]);
@@ -343,7 +358,7 @@ export default function JobApplicantsPage({
                 className="applicants-action-btn applicants-action-btn--secondary"
                 type="button"
                 onClick={handleScreenSelected}
-                disabled={selectedCount === 0 || isRunning}
+                disabled={validSelectedCount === 0 || isRunning}
               >
                 <FileSearch size={16} />
                 {isRunning ? "Starting..." : "Scan selected"}
