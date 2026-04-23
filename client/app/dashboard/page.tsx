@@ -116,6 +116,11 @@ export default function DashboardPage() {
       <div className="page-container">
         <DashboardTopBar breadcrumbs={['Dashboard']} showSearch showCreateJobButton />
         {error ? <p>{error}</p> : null}
+        {!error && jobs.length === 0 && sessions.length === 0 ? (
+          <div className="screenings-empty">
+            Your workspace is empty right now. Create a job and run a screening session to start seeing dashboard insights.
+          </div>
+        ) : null}
         <DashboardOverviewSection rows={overviewRows} />
         <DashboardCharts volumeSeries={volumeSeries} shortlistByRole={shortlistByRole} />
       </div>

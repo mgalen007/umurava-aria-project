@@ -9,6 +9,12 @@ import { AIService } from '../../ai/ai.service';
 const aiService = new AIService();
 
 export class SessionsService {
+  private populateSessionQuery<T>(query: T) {
+    // Return the same lightweight session shape the frontend expects after initial load.
+    return (query as any)
+      .populate('jobId', 'title experienceLevel location remote status')
+      .populate('candidateIds', 'firstName lastName email headline location');
+  }
 
   async create(data: CreateSessionDto, createdBy: string) {
     const job = await Job.findOne({ _id: data.jobId, createdBy });
@@ -116,16 +122,15 @@ export class SessionsService {
   }
 
   async findAll(createdBy: string) {
-    const sessions = await Session.find({ createdBy })
-      .populate('jobId', 'title experienceLevel location remote status')
+    const sessions = await this.populateSessionQuery(Session.find({ createdBy }))
       .sort({ createdAt: -1 });
     return sessions;
   }
 
   async findOne(sessionId: string, createdBy: string) {
-    const session = await Session.findOne({ _id: sessionId, createdBy })
-      .populate('jobId', 'title experienceLevel location remote status')
-      .populate('candidateIds', 'firstName lastName email headline location');
+    const session = await this.populateSessionQuery(
+      Session.findOne({ _id: sessionId, createdBy })
+    );
     if (!session) throw new AppError('Session not found', 404);
     return session;
   }
@@ -165,6 +170,6 @@ export class SessionsService {
       }
     );
 
-    return session;
+    return this.findOne(sessionId, createdBy);
   }
 }
