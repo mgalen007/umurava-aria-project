@@ -7,7 +7,15 @@ import { SettingsPageSkeleton } from '@/components/skeletons/PageSkeletons';
 import { useAuth } from '@/lib/auth';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <PageSkeletonGate skeleton={<SettingsPageSkeleton />}>
+        <div className="page-container" />
+      </PageSkeletonGate>
+    );
+  }
 
   return (
     <PageSkeletonGate skeleton={<SettingsPageSkeleton />}>
@@ -18,12 +26,18 @@ export default function SettingsPage() {
           <h2 className="text-h2" style={{ marginBottom: '1rem' }}>
             Profile
           </h2>
-          <p className="text-body-sm" style={{ marginBottom: '0.5rem' }}>
-            <strong>Name:</strong> {user?.name ?? '—'}
-          </p>
-          <p className="text-body-sm">
-            <strong>Email:</strong> {user?.email ?? '—'}
-          </p>
+          {user ? (
+            <>
+              <p className="text-body-sm" style={{ marginBottom: '0.5rem' }}>
+                <strong>Name:</strong> {user.name}
+              </p>
+              <p className="text-body-sm">
+                <strong>Email:</strong> {user.email}
+              </p>
+            </>
+          ) : (
+            <p className="text-body-sm">Your account details are not available right now.</p>
+          )}
         </div>
       </div>
     </PageSkeletonGate>

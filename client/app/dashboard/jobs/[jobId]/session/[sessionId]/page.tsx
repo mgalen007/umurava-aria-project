@@ -37,13 +37,24 @@ export default function ScreeningSessionPage({
 
   useEffect(() => {
     if (!token || !sessionId) return;
+    let isActive = true;
+    setError(null);
 
     api.getSession(sessionId, token)
       .then((result) => {
+        if (!isActive) return;
         setSession(result);
         setSelectedCandidateId(result.rankedResults[0]?.candidateId ?? '');
+        setError(null);
       })
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load session results.'));
+      .catch((err) => {
+        if (!isActive) return;
+        setError(err instanceof ApiError ? err.message : 'Unable to load session results.');
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [sessionId, token]);
 
   const candidates = useMemo(() => {
@@ -61,6 +72,7 @@ export default function ScreeningSessionPage({
     if (!token || !activeResult) return;
 
     try {
+      setError(null);
       const updatedSession = await api.submitSessionFeedback(
         sessionId,
         {
@@ -80,6 +92,7 @@ export default function ScreeningSessionPage({
           : `AI screening result confirmed for ${activeCandidate ? getCandidateName(activeCandidate) : 'candidate'}.`
       );
     } catch (err) {
+      setError(null);
       setStatusMessage(err instanceof ApiError ? err.message : 'Unable to save feedback.');
     }
   }

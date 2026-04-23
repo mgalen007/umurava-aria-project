@@ -55,6 +55,8 @@ export default function JobApplicantsPage({
 
   useEffect(() => {
     if (!token || !jobId) return;
+    let isActive = true;
+    setError(null);
 
     Promise.all([
       api.getJob(jobId, token),
@@ -62,6 +64,7 @@ export default function JobApplicantsPage({
       api.getSessions(token),
     ])
       .then(([jobResult, candidatesResult, sessionsResult]) => {
+        if (!isActive) return;
         setJob(jobResult);
         setAllCandidates(candidatesResult);
         setSessions(
@@ -69,18 +72,25 @@ export default function JobApplicantsPage({
             (session) => getJobId(session) === jobId,
           ),
         );
+        setError(null);
       })
-      .catch((err) =>
+      .catch((err) => {
+        if (!isActive) return;
         setError(
           err instanceof ApiError
             ? err.message
             : "Unable to load job workspace.",
-        ),
-      );
+        );
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [jobId, token]);
 
   async function refreshWorkspace() {
     if (!token || !jobId) return;
+    setError(null);
 
     const [candidatesResult, sessionsResult] = await Promise.all([
       api.getCandidates(token),
@@ -173,6 +183,7 @@ export default function JobApplicantsPage({
     }
 
     setIsRunning(true);
+    setError(null);
     setBannerFailures([]);
     try {
       const session = await api.createSession(
@@ -206,6 +217,7 @@ export default function JobApplicantsPage({
     if (!file || !token) return;
 
     setIsUploading(true);
+    setError(null);
     setBannerMessage(null);
     setBannerFailures([]);
     try {
@@ -242,6 +254,7 @@ export default function JobApplicantsPage({
     if (!files?.length || !token) return;
 
     setIsUploading(true);
+    setError(null);
     setBannerMessage(null);
     setBannerFailures([]);
     try {
@@ -423,6 +436,7 @@ export default function JobApplicantsPage({
 
           {error ? <div className="applicants-empty">{error}</div> : null}
 
+          {!error ? (
           <div className="applicants-table-shell">
             <div className="applicants-table-meta">
               <span>
@@ -523,6 +537,7 @@ export default function JobApplicantsPage({
               </table>
             </div>
           </div>
+          ) : null}
         </section>
 
         <div
@@ -551,11 +566,11 @@ export default function JobApplicantsPage({
           </div>
 
           <div className="sessions-list">
-            {sessions.length === 0 ? (
+            {!error && sessions.length === 0 ? (
               <div className="sessions-empty">
                 No screening sessions have been run for this role yet.
               </div>
-            ) : (
+            ) : !error ? (
               sessions.map((session) => (
                 <article className="session-card" key={session._id}>
                   <div className="session-card__top">
@@ -602,7 +617,7 @@ export default function JobApplicantsPage({
                   </Link>
                 </article>
               ))
-            )}
+            ) : null}
           </div>
         </aside>
       </div>

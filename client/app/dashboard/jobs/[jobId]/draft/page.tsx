@@ -25,16 +25,29 @@ export default function JobDraftPage({
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<'success' | 'error'>('success');
 
   useEffect(() => {
     if (!token || !jobId) return;
+    let isActive = true;
+    setStatusMessage(null);
 
     api.getJob(jobId, token)
       .then((result) => {
+        if (!isActive) return;
         setJob(result);
         setDescription(result.description);
+        setStatusMessage(null);
       })
-      .catch((err) => setStatusMessage(err instanceof ApiError ? err.message : 'Unable to load job.'));
+      .catch((err) => {
+        if (!isActive) return;
+        setStatusTone('error');
+        setStatusMessage(err instanceof ApiError ? err.message : 'Unable to load job.');
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [jobId, token]);
 
   async function saveChanges() {
@@ -43,9 +56,11 @@ export default function JobDraftPage({
     try {
       const updatedJob = await api.updateJob(job._id, { description }, token);
       setJob(updatedJob);
+      setStatusTone('success');
       setStatusMessage('Job description updated.');
       setIsEditing(false);
     } catch (err) {
+      setStatusTone('error');
       setStatusMessage(err instanceof ApiError ? err.message : 'Unable to update job.');
     }
   }
@@ -53,7 +68,9 @@ export default function JobDraftPage({
   if (!job) {
     return (
       <PageSkeletonGate skeleton={<DraftPageSkeleton />}>
-        <div className="page-container draft-page">{statusMessage ? <p>{statusMessage}</p> : null}</div>
+        <div className="page-container draft-page">
+          {statusMessage ? <div className="draft-empty-copy">{statusMessage}</div> : null}
+        </div>
       </PageSkeletonGate>
     );
   }
@@ -84,7 +101,11 @@ export default function JobDraftPage({
             </div>
           </div>
 
-          {statusMessage ? <div className="draft-empty-copy">{statusMessage}</div> : null}
+          {statusMessage ? (
+            <div className="draft-empty-copy" role={statusTone === 'error' ? 'alert' : 'status'}>
+              {statusMessage}
+            </div>
+          ) : null}
 
           <div className="draft-layout">
             <aside className="draft-sidebar">
