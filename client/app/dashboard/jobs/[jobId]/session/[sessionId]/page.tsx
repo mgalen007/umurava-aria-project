@@ -73,6 +73,7 @@ export default function ScreeningSessionPage({
       );
 
       setSession(updatedSession);
+      setSelectedCandidateId(activeResult.candidateId);
       setStatusMessage(
         action === 'overridden'
           ? `Manual review saved for ${activeCandidate ? getCandidateName(activeCandidate) : 'candidate'}.`
@@ -83,11 +84,61 @@ export default function ScreeningSessionPage({
     }
   }
 
-  if (!session || !activeResult || !activeCandidate) {
+  if (!session) {
     return (
       <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
         <div className="page-container screening-session-page">
           {error ? <p>{error}</p> : null}
+        </div>
+      </PageSkeletonGate>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
+        <div className="page-container screening-session-page">
+          <div className="screenings-empty">{error}</div>
+        </div>
+      </PageSkeletonGate>
+    );
+  }
+
+  if (session.status === 'failed') {
+    return (
+      <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
+        <div className="page-container screening-session-page">
+          <DashboardTopBar breadcrumbs={['Screenings', session.name]} />
+          <div className="screenings-empty">
+            <div>Screening failed for this session.</div>
+            <div style={{ marginTop: '0.5rem' }}>{session.error ?? 'No error details were returned.'}</div>
+          </div>
+        </div>
+      </PageSkeletonGate>
+    );
+  }
+
+  if (session.status === 'pending' || session.status === 'processing') {
+    return (
+      <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
+        <div className="page-container screening-session-page">
+          <DashboardTopBar breadcrumbs={['Screenings', session.name]} />
+          <div className="screenings-empty">
+            Screening is still running. Refresh this page in a moment to see ranked results.
+          </div>
+        </div>
+      </PageSkeletonGate>
+    );
+  }
+
+  if (!activeResult || !activeCandidate) {
+    return (
+      <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
+        <div className="page-container screening-session-page">
+          <DashboardTopBar breadcrumbs={['Screenings', session.name]} />
+          <div className="screenings-empty">
+            This session completed, but the candidate detail needed for the results view was not available.
+          </div>
         </div>
       </PageSkeletonGate>
     );

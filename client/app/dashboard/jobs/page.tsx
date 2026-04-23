@@ -68,6 +68,11 @@ export default function JobsPage() {
           {error ? <p>{error}</p> : null}
 
           <div className="jobs-grid">
+            {sortedJobs.length === 0 ? (
+              <div className="jobs-empty-state">
+                No jobs have been created yet. Create a new job to start importing and screening candidates.
+              </div>
+            ) : null}
             {sortedJobs.map((job) => (
               <article className="job-card" key={job._id}>
                 <div className="job-card-header">
