@@ -124,10 +124,19 @@ export type SessionCandidate = {
   skills?: CandidateSkill[];
 };
 
+export type SessionJobRef = {
+  _id?: string;
+  title: string;
+  experienceLevel?: string;
+  location?: string;
+  remote?: boolean;
+  status?: JobStatus;
+} | null;
+
 export type RankedCitation = {
   dimension: string;
   evidence: string;
-  sourceSection: string;
+  source_section: string;
   impact: string;
 };
 
@@ -162,16 +171,7 @@ export type SessionStatus = "pending" | "processing" | "completed" | "failed";
 
 export type Session = {
   _id: string;
-  jobId:
-    | string
-    | {
-        _id?: string;
-        title: string;
-        experienceLevel?: string;
-        location?: string;
-        remote?: boolean;
-        status?: JobStatus;
-      };
+  jobId: string | SessionJobRef;
   name: string;
   status: SessionStatus;
   candidateIds: Array<
