@@ -1,8 +1,8 @@
 'use client';
 
-import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Eye, Search, UploadCloud, X } from 'lucide-react';
+import { Eye, Search, X } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { CandidatesPageSkeleton } from '@/components/skeletons/PageSkeletons';
@@ -18,11 +18,6 @@ export default function CandidatesPage() {
   const [query, setQuery] = useState('');
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
-  const [uploadFailures, setUploadFailures] = useState<string[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const pdfInputRef = useRef<HTMLInputElement | null>(null);
-  const csvInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -60,54 +55,6 @@ export default function CandidatesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
 
-  async function refreshCandidates() {
-    if (!token) return;
-    const next = await api.getCandidates(token);
-    setCandidates(next);
-  }
-
-  async function handleCsvUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file || !token) return;
-
-    setIsUploading(true);
-    setUploadStatus(null);
-    setUploadFailures([]);
-    try {
-      const result = await api.ingestCandidateCsv(file, token);
-      await refreshCandidates();
-      setUploadStatus(`Imported ${result.succeeded.length} candidate(s). ${result.failed.length} failed.`);
-      setUploadFailures(result.failed);
-    } catch (err) {
-      setUploadStatus(err instanceof ApiError ? err.message : 'Unable to import CSV.');
-      setUploadFailures([]);
-    } finally {
-      setIsUploading(false);
-      event.target.value = '';
-    }
-  }
-
-  async function handlePdfUpload(event: ChangeEvent<HTMLInputElement>) {
-    const files = event.target.files;
-    if (!files?.length || !token) return;
-
-    setIsUploading(true);
-    setUploadStatus(null);
-    setUploadFailures([]);
-    try {
-      const result = await api.ingestCandidatePdfs(files, token);
-      await refreshCandidates();
-      setUploadStatus(`Imported ${result.succeeded.length} resume(s). ${result.failed.length} failed.`);
-      setUploadFailures(result.failed);
-    } catch (err) {
-      setUploadStatus(err instanceof ApiError ? err.message : 'Unable to import resumes.');
-      setUploadFailures([]);
-    } finally {
-      setIsUploading(false);
-      event.target.value = '';
-    }
-  }
-
   return (
     <PageSkeletonGate skeleton={<CandidatesPageSkeleton />}>
       <div className="page-container candidates-page">
@@ -119,7 +66,7 @@ export default function CandidatesPage() {
               <p className="candidates-eyebrow">Candidate directory</p>
               <h1 className="candidates-heading">Candidates across your workspace</h1>
               <p className="candidates-subtitle">
-                Browse imported talent, upload fresh resumes, and review profiles ready for screening.
+                Browse talent already in your workspace and review profiles that can be attached to different job pipelines.
               </p>
             </div>
 
@@ -145,40 +92,17 @@ export default function CandidatesPage() {
               <span className="candidates-toolbar__meta">
                 Showing {filteredCandidates.length} of {candidates.length}
               </span>
-              <button type="button" className="candidates-action-btn" onClick={() => pdfInputRef.current?.click()} disabled={isUploading}>
-                <UploadCloud size={16} />
-                Upload PDFs
-              </button>
-              <button type="button" className="candidates-action-btn" onClick={() => csvInputRef.current?.click()} disabled={isUploading}>
-                <UploadCloud size={16} />
-                Import CSV
-              </button>
               <Link href="/dashboard/jobs" className="candidates-action-btn">
-                View jobs
+                Open jobs
               </Link>
             </div>
           </div>
 
-          <input ref={pdfInputRef} type="file" accept=".pdf,application/pdf" multiple hidden onChange={handlePdfUpload} />
-          <input ref={csvInputRef} type="file" accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden onChange={handleCsvUpload} />
-
           {error ? <div className="candidates-empty">{error}</div> : null}
-          {uploadStatus ? (
-            <div className="candidates-empty">
-              <div>{uploadStatus}</div>
-              {uploadFailures.length > 0 ? (
-                <div style={{ marginTop: '0.75rem', textAlign: 'left' }}>
-                  {uploadFailures.map((failure, index) => (
-                    <div key={`${failure}-${index}`}>{failure}</div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
 
           <div className="candidates-table-shell">
             <div className="candidates-table-meta">
-              <span>Use this view to compare talent across all active and draft roles.</span>
+              <span>Use this view to compare talent across all active and draft roles. Import new candidates from an individual job page.</span>
             </div>
 
             <div className="candidates-table-container">

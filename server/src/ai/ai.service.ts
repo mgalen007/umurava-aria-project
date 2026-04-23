@@ -1,6 +1,6 @@
-import { GoogleGenAI } from '@google/genai';
-import { IJob } from '../features/jobs/jobs.types';
-import { ICandidate } from '../features/candidates/candidates.types';
+import { GoogleGenAI } from "@google/genai";
+import { IJob } from "../features/jobs/jobs.types";
+import { ICandidate } from "../features/candidates/candidates.types";
 
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -89,113 +89,114 @@ const SYSTEM_PROMPT = `
     `.trim();
 
 interface EvaluateInput {
-  sessionId:  string;
-  job:        IJob;
+  sessionId: string;
+  job: IJob;
   candidates: ICandidate[];
 }
 
 export interface AIRankingResult {
-  session_id:    string;
-  rankings:      CandidateRanking[];
+  session_id: string;
+  rankings: CandidateRanking[];
   batch_summary: BatchSummary;
 }
 
 export interface CandidateRanking {
-  rank:                        number;
-  candidate_id:                string;
-  candidate_name:              string;
-  total_score:                 number;
+  rank: number;
+  candidate_id: string;
+  candidate_name: string;
+  total_score: number;
   score_breakdown: {
-    technical_skills:           number;
-    relevant_experience:        number;
-    education_certifications:   number;
-    cultural_relevance_fit:     number;
+    technical_skills: number;
+    relevant_experience: number;
+    education_certifications: number;
+    cultural_relevance_fit: number;
   };
-  verdict:                     string;
-  strengths:                   string[];
-  gaps:                        string[];
-  citations:                   Citation[];
-  recruiter_note:              string;
+  verdict: string;
+  strengths: string[];
+  gaps: string[];
+  citations: Citation[];
+  recruiter_note: string;
   hard_disqualification_reason: string | null;
 }
 
 interface Citation {
-  dimension:      string;
-  evidence:       string;
+  dimension: string;
+  evidence: string;
   source_section: string;
-  impact:         string;
+  impact: string;
 }
 
 interface BatchSummary {
   recommended_for_interview: string[];
-  hold_pool:                 string[];
-  not_advancing:             string[];
-  top_differentiator:        string;
-  talent_pool_quality:       'HIGH' | 'MEDIUM' | 'LOW';
+  hold_pool: string[];
+  not_advancing: string[];
+  top_differentiator: string;
+  talent_pool_quality: "HIGH" | "MEDIUM" | "LOW";
 }
 
 export class AIService {
-
   async evaluate(input: EvaluateInput): Promise<AIRankingResult> {
     const { sessionId, job, candidates } = input;
 
     const prompt = this.buildPrompt(sessionId, job, candidates);
 
     const response = await genai.models.generateContent({
-      model:    'gemini-3.1-flash-lite-preview',
-      contents: [{
-        role:  'user',
-        parts: [{ text: prompt }],
-      }],
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
       config: {
         systemInstruction: {
           parts: [{ text: SYSTEM_PROMPT }],
         },
-        responseMimeType: 'application/json',
-        temperature:      0.1,
-        maxOutputTokens:  8192,
+        responseMimeType: "application/json",
+        temperature: 0.1,
+        maxOutputTokens: 8192,
       },
     });
 
     const raw = response.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) throw new Error('Empty response from Gemini');
+    if (!raw) throw new Error("Empty response from Gemini");
 
     return this.parse(raw);
   }
 
   private buildPrompt(
-    sessionId:  string,
-    job:        IJob,
-    candidates: ICandidate[]
+    sessionId: string,
+    job: IJob,
+    candidates: ICandidate[],
   ): string {
     const jobContext = {
-      session_id:           sessionId,
-      job_title:            job.title,
-      job_description:      job.description,
-      required_skills:      job.requiredSkills,
-      nice_to_have_skills:  job.niceToHaveSkills,
-      experience_level:     job.experienceLevel,
+      session_id: sessionId,
+      job_title: job.title,
+      job_description: job.description,
+      required_skills: job.requiredSkills,
+      nice_to_have_skills: job.niceToHaveSkills,
+      experience_level: job.experienceLevel,
       min_years_experience: job.minYearsExperience,
       max_years_experience: job.maxYearsExperience ?? null,
-      location:             job.location,
-      remote:               job.remote,
-      hard_requirements:    job.hardRequirements,
+      location: job.location,
+      remote: job.remote,
+      hard_requirements: job.hardRequirements,
     };
 
     const candidatesContext = candidates.map((c) => ({
-      candidate_id:            c._id.toString(),
-      candidate_name:          this.buildCandidateName(c),
-      headline:                c.headline,
-      summary:                 c.bio ?? null,
-      location:                c.location,
-      languages:               c.languages,
-      total_years_experience:  this.getTotalYearsExperience(c),
-      work_experience:         c.experience,
-      education:               c.education,
-      skills:                  c.skills,
-      certifications:          c.certifications,
-      extraction_confidence:   c.extractionConfidence,
-      extraction_warnings:     c.extractionWarnings ?? [],
+      candidate_id: c._id.toString(),
+      candidate_name: this.buildCandidateName(c),
+      headline: c.headline,
+      summary: c.bio ?? null,
+      location: c.location,
+      languages: c.languages,
+      total_years_experience: this.getTotalYearsExperience(c),
+      work_experience: c.experience,
+      education: c.education,
+      skills: c.skills,
+      certifications: c.certifications,
+      extraction_confidence: c.extractionConfidence,
+      extraction_warnings: c.extractionWarnings ?? [],
     }));
 
     return `
@@ -212,7 +213,10 @@ export class AIService {
   }
 
   private buildCandidateName(candidate: ICandidate): string {
-    return [candidate.firstName, candidate.lastName].filter(Boolean).join(' ').trim();
+    return [candidate.firstName, candidate.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
   }
 
   private getTotalYearsExperience(candidate: ICandidate): number {
@@ -220,7 +224,9 @@ export class AIService {
       const startYear = this.getYear(item.startDate);
       if (!startYear) return total;
 
-      const endYear = item.isCurrent ? new Date().getFullYear() : (this.getYear(item.endDate) ?? new Date().getFullYear());
+      const endYear = item.isCurrent
+        ? new Date().getFullYear()
+        : (this.getYear(item.endDate) ?? new Date().getFullYear());
       const years = Math.max(0, endYear - startYear);
       return total + years;
     }, 0);
@@ -242,8 +248,8 @@ export class AIService {
       return JSON.parse(raw) as AIRankingResult;
     } catch {
       const cleaned = raw
-        .replace(/^```json\s*/i, '')
-        .replace(/```\s*$/i, '')
+        .replace(/^```json\s*/i, "")
+        .replace(/```\s*$/i, "")
         .trim();
       return JSON.parse(cleaned) as AIRankingResult;
     }

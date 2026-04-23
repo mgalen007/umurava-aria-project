@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { CheckCircle2, Eye, PencilLine } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
@@ -8,7 +9,7 @@ import { SessionResultsPageSkeleton } from '@/components/skeletons/PageSkeletons
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { buildCandidateCvUrl, formatSessionStatus, getCandidateName } from '@/lib/helpers';
-import type { Candidate, RankedResult, Session } from '@/lib/types';
+import type { RankedResult, Session, SessionCandidate } from '@/lib/types';
 import './results.css';
 
 function scoreTone(scorePercent: number): 'green' | 'orange' | 'red' {
@@ -18,10 +19,13 @@ function scoreTone(scorePercent: number): 'green' | 'orange' | 'red' {
 }
 
 export default function ScreeningSessionPage({
-  params,
+  params: _params,
 }: {
-  params: { jobId: string; sessionId: string };
+  params: Promise<{ jobId: string; sessionId: string }>;
 }) {
+  const routeParams = useParams<{ jobId: string; sessionId: string }>();
+  const jobId = typeof routeParams?.jobId === 'string' ? routeParams.jobId : '';
+  const sessionId = typeof routeParams?.sessionId === 'string' ? routeParams.sessionId : '';
   const { token } = useAuth();
   const [session, setSession] = useState<Session | null>(null);
   const [selectedCandidateId, setSelectedCandidateId] = useState('');
@@ -32,18 +36,18 @@ export default function ScreeningSessionPage({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !sessionId) return;
 
-    api.getSession(params.sessionId, token)
+    api.getSession(sessionId, token)
       .then((result) => {
         setSession(result);
         setSelectedCandidateId(result.rankedResults[0]?.candidateId ?? '');
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load session results.'));
-  }, [params.sessionId, token]);
+  }, [sessionId, token]);
 
   const candidates = useMemo(() => {
-    return (session?.candidateIds ?? []).filter((item): item is Candidate => typeof item !== 'string');
+    return (session?.candidateIds ?? []).filter((item): item is SessionCandidate => typeof item !== 'string');
   }, [session]);
 
   const rankedResults = useMemo(() => {
@@ -58,7 +62,7 @@ export default function ScreeningSessionPage({
 
     try {
       const updatedSession = await api.submitSessionFeedback(
-        params.sessionId,
+        sessionId,
         {
           candidateId: activeResult.candidateId,
           action,
@@ -91,6 +95,7 @@ export default function ScreeningSessionPage({
 
   const featuredScore = activeResult.finalScore;
   const jobTitle = typeof session.jobId === 'string' ? 'Job' : session.jobId.title;
+  const activeCandidateSkills = activeCandidate.skills ?? [];
 
   return (
     <PageSkeletonGate skeleton={<SessionResultsPageSkeleton />}>
@@ -158,11 +163,15 @@ export default function ScreeningSessionPage({
             </div>
 
             <div className="session-results-skill-badges">
-              {activeCandidate.skills.map((badge) => (
-                <span key={badge.name} className="session-results-skill-badge">
-                  {badge.name}
-                </span>
-              ))}
+              {activeCandidateSkills.length > 0 ? (
+                activeCandidateSkills.map((badge) => (
+                  <span key={badge.name} className="session-results-skill-badge">
+                    {badge.name}
+                  </span>
+                ))
+              ) : (
+                <span className="session-results-skill-badge">Skills not loaded in this session view</span>
+              )}
             </div>
 
             <div className="session-results-divider" />

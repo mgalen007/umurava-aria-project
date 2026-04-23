@@ -1,10 +1,10 @@
-import type { Candidate, CandidateExperience, Job, JobStatus, Session, SessionStatus } from './types';
+import type { Candidate, CandidateExperience, CandidateSkill, Job, JobStatus, Session, SessionCandidate, SessionStatus } from './types';
 
-export function getCandidateName(candidate: Pick<Candidate, 'firstName' | 'lastName'>) {
+export function getCandidateName(candidate: Pick<Candidate | SessionCandidate, 'firstName' | 'lastName'>) {
   return `${candidate.firstName} ${candidate.lastName}`.trim();
 }
 
-export function getCandidateInitials(candidate: Pick<Candidate, 'firstName' | 'lastName'>) {
+export function getCandidateInitials(candidate: Pick<Candidate | SessionCandidate, 'firstName' | 'lastName'>) {
   return `${candidate.firstName?.[0] ?? ''}${candidate.lastName?.[0] ?? ''}`.trim().toUpperCase() || '?';
 }
 
@@ -95,7 +95,12 @@ export function formatRelativeDate(value: string) {
   }).format(date);
 }
 
-export function buildCandidateCvUrl(candidate: Candidate) {
+export function buildCandidateCvUrl(
+  candidate: Pick<Candidate | SessionCandidate, 'firstName' | 'lastName' | 'email' | 'headline' | 'location'> & {
+    bio?: string;
+    skills?: CandidateSkill[];
+  }
+) {
   const content = [
     `${getCandidateName(candidate)} CV`,
     `Email: ${candidate.email}`,
@@ -104,7 +109,7 @@ export function buildCandidateCvUrl(candidate: Candidate) {
     '',
     candidate.bio ?? 'No summary available.',
     '',
-    `Skills: ${candidate.skills.map((skill) => skill.name).join(', ') || 'None listed'}`,
+    `Skills: ${candidate.skills?.map((skill) => skill.name).join(', ') || 'None listed'}`,
   ].join('\n');
 
   return `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`;

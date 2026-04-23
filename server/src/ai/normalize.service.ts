@@ -2,7 +2,10 @@ import { PDFParse } from "pdf-parse";
 import Papa from "papaparse";
 import ExcelJS from "exceljs";
 import { GoogleGenAI } from "@google/genai";
-import { ingestCandidateDto, IngestCandidateDto } from "../features/candidates/candidates.dto";
+import {
+  ingestCandidateDto,
+  IngestCandidateDto,
+} from "../features/candidates/candidates.dto";
 
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -15,7 +18,7 @@ export class NormalizeService {
     await parser.destroy();
 
     const response = await genai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-2.5-flash",
       contents: [
         {
           role: "user",
@@ -63,7 +66,9 @@ Resume text:\n\n${text}`,
     });
 
     const raw = response.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-    return this.normalizeCandidate(JSON.parse(raw) as Partial<IngestCandidateDto>);
+    return this.normalizeCandidate(
+      JSON.parse(raw) as Partial<IngestCandidateDto>,
+    );
   }
 
   async fromCSV(buffer: Buffer): Promise<IngestCandidateDto[]> {
@@ -115,25 +120,32 @@ Resume text:\n\n${text}`,
   private mapCSVRow(row: Record<string, string>): IngestCandidateDto {
     const normalizedRow = this.normalizeRow(row);
     const { firstName, lastName } = this.extractNameParts(
-      normalizedRow.fullname ?? normalizedRow.full_name ?? normalizedRow.name ?? normalizedRow.candidate_name ?? ""
+      normalizedRow.fullname ??
+        normalizedRow.full_name ??
+        normalizedRow.name ??
+        normalizedRow.candidate_name ??
+        "",
     );
 
     const headline =
       normalizedRow.headline ??
       normalizedRow.role ??
       normalizedRow.job_title ??
-      'Candidate';
+      "Candidate";
 
     const skills = this.splitList(normalizedRow.skills).map((skill) => ({
       name: skill,
       level: "Intermediate" as const,
-      yearsOfExperience: this.parseNumber(normalizedRow.years_of_experience) ?? 0,
+      yearsOfExperience:
+        this.parseNumber(normalizedRow.years_of_experience) ?? 0,
     }));
 
-    const languages = this.splitList(normalizedRow.languages).map((language) => ({
-      name: language,
-      proficiency: "Fluent" as const,
-    }));
+    const languages = this.splitList(normalizedRow.languages).map(
+      (language) => ({
+        name: language,
+        proficiency: "Fluent" as const,
+      }),
+    );
 
     const experience = this.buildExperience(normalizedRow);
     const education = this.buildEducation(normalizedRow);
@@ -143,10 +155,14 @@ Resume text:\n\n${text}`,
     return this.normalizeCandidate({
       firstName,
       lastName,
-      email: normalizedRow.email ?? '',
+      email: normalizedRow.email ?? "",
       headline,
       bio: normalizedRow.summary ?? normalizedRow.bio ?? undefined,
-      location: normalizedRow.location ?? normalizedRow.city ?? normalizedRow.country ?? 'Unknown',
+      location:
+        normalizedRow.location ??
+        normalizedRow.city ??
+        normalizedRow.country ??
+        "Unknown",
       skills,
       languages,
       experience,
@@ -162,14 +178,16 @@ Resume text:\n\n${text}`,
     });
   }
 
-  private normalizeCandidate(candidate: Partial<IngestCandidateDto>): IngestCandidateDto {
+  private normalizeCandidate(
+    candidate: Partial<IngestCandidateDto>,
+  ): IngestCandidateDto {
     const normalized = {
-      firstName: this.fallbackText(candidate.firstName, 'Unknown'),
-      lastName: this.fallbackText(candidate.lastName, 'Candidate'),
-      email: (candidate.email ?? '').trim().toLowerCase(),
-      headline: this.fallbackText(candidate.headline, 'Candidate'),
+      firstName: this.fallbackText(candidate.firstName, "Unknown"),
+      lastName: this.fallbackText(candidate.lastName, "Candidate"),
+      email: (candidate.email ?? "").trim().toLowerCase(),
+      headline: this.fallbackText(candidate.headline, "Candidate"),
       bio: candidate.bio?.trim() || undefined,
-      location: this.fallbackText(candidate.location, 'Unknown'),
+      location: this.fallbackText(candidate.location, "Unknown"),
       skills: candidate.skills ?? [],
       languages: candidate.languages ?? [],
       experience: candidate.experience ?? [],
@@ -190,16 +208,16 @@ Resume text:\n\n${text}`,
     return Object.fromEntries(
       Object.entries(row).map(([key, value]) => [
         key.toLowerCase().trim(),
-        typeof value === 'string' ? value.trim() : '',
-      ])
+        typeof value === "string" ? value.trim() : "",
+      ]),
     );
   }
 
   private extractNameParts(fullName: string) {
     const parts = fullName.trim().split(/\s+/).filter(Boolean);
     return {
-      firstName: parts[0] ?? 'Unknown',
-      lastName: parts.slice(1).join(' ') || 'Candidate',
+      firstName: parts[0] ?? "Unknown",
+      lastName: parts.slice(1).join(" ") || "Candidate",
     };
   }
 
@@ -225,19 +243,30 @@ Resume text:\n\n${text}`,
   private buildExperience(row: Record<string, string>) {
     const company = row.company ?? row.current_company;
     const role = row.role ?? row.job_title;
-    const description = row.experience_description ?? row.work_experience ?? row.summary;
+    const description =
+      row.experience_description ?? row.work_experience ?? row.summary;
 
     if (!company && !role && !description) return [];
 
-    return [{
-      company: this.fallbackText(company, 'Unknown Company'),
-      role: this.fallbackText(role, row.headline ?? 'Unknown Role'),
-      startDate: this.fallbackText(row.start_date ?? row.experience_start_date, 'Unknown'),
-      endDate: row.end_date ?? row.experience_end_date ?? undefined,
-      description: this.fallbackText(description, 'Imported from candidate ingestion'),
-      technologies: this.splitList(row.skills),
-      isCurrent: ['true', 'yes', '1', 'current'].includes((row.is_current ?? '').toLowerCase()),
-    }];
+    return [
+      {
+        company: this.fallbackText(company, "Unknown Company"),
+        role: this.fallbackText(role, row.headline ?? "Unknown Role"),
+        startDate: this.fallbackText(
+          row.start_date ?? row.experience_start_date,
+          "Unknown",
+        ),
+        endDate: row.end_date ?? row.experience_end_date ?? undefined,
+        description: this.fallbackText(
+          description,
+          "Imported from candidate ingestion",
+        ),
+        technologies: this.splitList(row.skills),
+        isCurrent: ["true", "yes", "1", "current"].includes(
+          (row.is_current ?? "").toLowerCase(),
+        ),
+      },
+    ];
   }
 
   private buildEducation(row: Record<string, string>) {
@@ -247,13 +276,15 @@ Resume text:\n\n${text}`,
 
     if (!institution && !degree && !fieldOfStudy) return [];
 
-    return [{
-      institution: this.fallbackText(institution, 'Unknown Institution'),
-      degree: this.fallbackText(degree, 'Unknown Degree'),
-      fieldOfStudy: this.fallbackText(fieldOfStudy, 'General Studies'),
-      startYear: this.parseNumber(row.start_year) ?? new Date().getFullYear(),
-      endYear: this.parseNumber(row.end_year),
-    }];
+    return [
+      {
+        institution: this.fallbackText(institution, "Unknown Institution"),
+        degree: this.fallbackText(degree, "Unknown Degree"),
+        fieldOfStudy: this.fallbackText(fieldOfStudy, "General Studies"),
+        startYear: this.parseNumber(row.start_year) ?? new Date().getFullYear(),
+        endYear: this.parseNumber(row.end_year),
+      },
+    ];
   }
 
   private buildProjects(row: Record<string, string>) {
@@ -262,23 +293,33 @@ Resume text:\n\n${text}`,
 
     if (!projectName && !projectDescription) return [];
 
-    return [{
-      name: this.fallbackText(projectName, 'Imported Project'),
-      description: this.fallbackText(projectDescription, 'Imported from candidate ingestion'),
-      technologies: this.splitList(row.skills),
-      role: this.fallbackText(row.role, 'Contributor'),
-      link: this.normalizeUrl(row.portfolio ?? row.project_link),
-      startDate: this.fallbackText(row.project_start_date ?? row.start_date, 'Unknown'),
-      endDate: row.project_end_date ?? row.end_date ?? undefined,
-    }];
+    return [
+      {
+        name: this.fallbackText(projectName, "Imported Project"),
+        description: this.fallbackText(
+          projectDescription,
+          "Imported from candidate ingestion",
+        ),
+        technologies: this.splitList(row.skills),
+        role: this.fallbackText(row.role, "Contributor"),
+        link: this.normalizeUrl(row.portfolio ?? row.project_link),
+        startDate: this.fallbackText(
+          row.project_start_date ?? row.start_date,
+          "Unknown",
+        ),
+        endDate: row.project_end_date ?? row.end_date ?? undefined,
+      },
+    ];
   }
 
   private buildCertifications(row: Record<string, string>) {
-    return this.splitList(row.certifications ?? row.certification).map((name) => ({
-      name,
-      issuer: this.fallbackText(row.certification_issuer, 'Unknown Issuer'),
-      issueDate: this.fallbackText(row.certification_issue_date, 'Unknown'),
-    }));
+    return this.splitList(row.certifications ?? row.certification).map(
+      (name) => ({
+        name,
+        issuer: this.fallbackText(row.certification_issuer, "Unknown Issuer"),
+        issueDate: this.fallbackText(row.certification_issue_date, "Unknown"),
+      }),
+    );
   }
 
   private buildSocialLinks(row: Record<string, string>) {
@@ -289,29 +330,42 @@ Resume text:\n\n${text}`,
     });
   }
 
-  private normalizeProjects(projects: IngestCandidateDto['projects'] | undefined) {
+  private normalizeProjects(
+    projects: IngestCandidateDto["projects"] | undefined,
+  ) {
     if (!Array.isArray(projects)) return [];
 
     return projects.map((project) => ({
-      name: this.fallbackText(project?.name, 'Imported Project'),
-      description: this.fallbackText(project?.description, 'Imported from resume'),
+      name: this.fallbackText(project?.name, "Imported Project"),
+      description: this.fallbackText(
+        project?.description,
+        "Imported from resume",
+      ),
       technologies: Array.isArray(project?.technologies)
-        ? project.technologies.filter((technology): technology is string => typeof technology === 'string' && technology.trim().length > 0)
+        ? project.technologies.filter(
+            (technology): technology is string =>
+              typeof technology === "string" && technology.trim().length > 0,
+          )
         : [],
-      role: this.fallbackText(project?.role, 'Contributor'),
+      role: this.fallbackText(project?.role, "Contributor"),
       link: this.normalizeUrl(project?.link),
-      startDate: this.fallbackText(project?.startDate, 'Unknown'),
+      startDate: this.fallbackText(project?.startDate, "Unknown"),
       endDate: project?.endDate?.trim() || undefined,
     }));
   }
 
-  private normalizeSocialLinks(socialLinks: IngestCandidateDto['socialLinks'] | undefined) {
+  private normalizeSocialLinks(
+    socialLinks: IngestCandidateDto["socialLinks"] | undefined,
+  ) {
     if (!socialLinks) return undefined;
 
     const normalized = this.toDefinedStringRecord(
       Object.entries(socialLinks).map(
-        ([key, value]): [string, string | undefined] => [key, this.normalizeUrl(value)]
-      )
+        ([key, value]): [string, string | undefined] => [
+          key,
+          this.normalizeUrl(value),
+        ],
+      ),
     );
 
     return normalized;
@@ -331,11 +385,16 @@ Resume text:\n\n${text}`,
   }
 
   private toDefinedStringRecord(
-    input: Record<string, string | undefined> | Array<[string, string | undefined]>
+    input:
+      | Record<string, string | undefined>
+      | Array<[string, string | undefined]>,
   ): Record<string, string> | undefined {
     const entries = Array.isArray(input) ? input : Object.entries(input);
     const normalized = Object.fromEntries(
-      entries.filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].length > 0)
+      entries.filter(
+        (entry): entry is [string, string] =>
+          typeof entry[1] === "string" && entry[1].length > 0,
+      ),
     );
 
     return Object.keys(normalized).length > 0 ? normalized : undefined;

@@ -5,7 +5,7 @@ export type AuthUser = {
   name: string;
   username: string;
   email: string;
-  role: 'admin' | 'recruiter';
+  role: "admin" | "recruiter";
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -16,7 +16,7 @@ export type AuthResponse = {
   user: AuthUser;
 };
 
-export type JobStatus = 'draft' | 'active' | 'closed';
+export type JobStatus = "draft" | "active" | "closed";
 
 export type Job = {
   _id: string;
@@ -25,7 +25,7 @@ export type Job = {
   description: string;
   requiredSkills: string[];
   niceToHaveSkills: string[];
-  experienceLevel: 'junior' | 'mid' | 'senior' | 'lead' | 'principal';
+  experienceLevel: "junior" | "mid" | "senior" | "lead" | "principal";
   minYearsExperience: number;
   maxYearsExperience?: number;
   location: string;
@@ -39,13 +39,13 @@ export type Job = {
 
 export type CandidateSkill = {
   name: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+  level: "Beginner" | "Intermediate" | "Advanced" | "Expert";
   yearsOfExperience: number;
 };
 
 export type CandidateLanguage = {
   name: string;
-  proficiency: 'Basic' | 'Conversational' | 'Fluent' | 'Native';
+  proficiency: "Basic" | "Conversational" | "Fluent" | "Native";
 };
 
 export type CandidateExperience = {
@@ -83,14 +83,14 @@ export type CandidateProject = {
 };
 
 export type CandidateAvailability = {
-  status: 'Available' | 'Open to Opportunities' | 'Not Available';
-  type: 'Full-time' | 'Part-time' | 'Contract';
+  status: "Available" | "Open to Opportunities" | "Not Available";
+  type: "Full-time" | "Part-time" | "Contract";
   startDate?: string;
 };
 
 export type Candidate = {
   _id: string;
-  source: 'pdf_resume' | 'csv_upload' | 'manual_entry' | 'umurava_json';
+  source: "pdf_resume" | "csv_upload" | "manual_entry" | "umurava_json";
   firstName: string;
   lastName: string;
   email: string;
@@ -107,10 +107,21 @@ export type Candidate = {
   socialLinks?: Record<string, string | undefined>;
   extractionConfidence: number;
   extractionWarnings?: string[];
-  globalStatus: 'available' | 'interviewing' | 'hired' | 'rejected';
+  globalStatus: "available" | "interviewing" | "hired" | "rejected";
   uploadedBy: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type SessionCandidate = {
+  _id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  headline: string;
+  location: string;
+  bio?: string;
+  skills?: CandidateSkill[];
 };
 
 export type RankedCitation = {
@@ -125,13 +136,18 @@ export type RankedResult = {
   candidateId: string;
   aiScore: number;
   finalScore: number;
-  verdict: 'STRONG_MATCH' | 'GOOD_MATCH' | 'BORDERLINE' | 'WEAK_MATCH' | 'DISQUALIFIED';
+  verdict:
+    | "STRONG_MATCH"
+    | "GOOD_MATCH"
+    | "BORDERLINE"
+    | "WEAK_MATCH"
+    | "DISQUALIFIED";
   strengths: string[];
   gaps: string[];
   citations: RankedCitation[];
   recruiterNote: string;
   hardDisqualificationReason: string | null;
-  feedbackStatus: 'pending' | 'approved' | 'overridden' | 'disqualified';
+  feedbackStatus: "pending" | "approved" | "overridden" | "disqualified";
 };
 
 export type BatchSummary = {
@@ -139,10 +155,10 @@ export type BatchSummary = {
   hold_pool?: string[];
   not_advancing?: string[];
   top_differentiator?: string;
-  talent_pool_quality?: 'HIGH' | 'MEDIUM' | 'LOW';
+  talent_pool_quality?: "HIGH" | "MEDIUM" | "LOW";
 };
 
-export type SessionStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type SessionStatus = "pending" | "processing" | "completed" | "failed";
 
 export type Session = {
   _id: string;
@@ -160,18 +176,11 @@ export type Session = {
   status: SessionStatus;
   candidateIds: Array<
     | string
-    | {
-        _id?: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        headline: string;
-        location: string;
-      }
+    | SessionCandidate
   >;
   rankedResults: RankedResult[];
   batchSummary?: BatchSummary;
-  modelUsed: 'gemini-3.1-flash-lite-preview' | 'gemini-1.5-pro';
+  modelUsed: "gemini-2.5-flash" | "gemini-1.5-pro";
   promptVersion: string;
   processingTimeMs?: number;
   error?: string;
@@ -180,4 +189,4 @@ export type Session = {
   updatedAt: string;
 };
 
-export type FeedbackAction = 'approved' | 'overridden' | 'disqualified';
+export type FeedbackAction = "approved" | "overridden" | "disqualified";
