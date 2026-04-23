@@ -52,7 +52,7 @@ export interface ISession extends Document {
   candidateIds: Types.ObjectId[];
   rankedResults: RankedResult[];
   batchSummary?: BatchSummary;
-  modelUsed: "gemini-2.5-flash" | "gemini-1.5-pro";
+  modelUsed: "gemini-2.5-flash-lite" | "gemini-1.5-pro";
   promptVersion: string;
   processingTimeMs?: number;
   error?: string;

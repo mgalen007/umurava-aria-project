@@ -18,8 +18,8 @@ export const createSessionDto = z.object({
       },
     ),
   modelUsed: z
-    .enum(["gemini-2.5-flash", "gemini-1.5-pro"])
-    .default("gemini-2.5-flash"),
+    .enum(["gemini-2.5-flash-lite", "gemini-1.5-pro"])
+    .default("gemini-2.5-flash-lite"),
 });
 
 export const feedbackDto = z

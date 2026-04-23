@@ -191,7 +191,7 @@ export default function JobApplicantsPage({
           jobId,
           name: `Session ${new Date().toLocaleString()}`,
           candidateIds: validSelectedIds,
-          modelUsed: "gemini-2.5-flash",
+          modelUsed: "gemini-2.5-flash-lite",
         },
         token,
       );
