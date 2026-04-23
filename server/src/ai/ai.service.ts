@@ -4,6 +4,10 @@ import { ICandidate } from "../features/candidates/candidates.types";
 import { AppError } from "../middleware/error";
 
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_AI_REQUEST_TIMEOUT_MS = 45000;
+const DEFAULT_AI_MAX_RETRIES = 2;
+const DEFAULT_AI_RETRY_BASE_DELAY_MS = 1500;
 
 const SYSTEM_PROMPT = `
     You are ARIA (AI Recruitment Intelligence Analyst), a Senior Technical Recruiter
@@ -141,23 +145,25 @@ export class AIService {
 
     const prompt = this.buildPrompt(sessionId, job, candidates);
 
-    const response = await genai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }],
+    const response = await this.generateContentWithRetry(() =>
+      genai.models.generateContent({
+        model: DEFAULT_MODEL,
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+        config: {
+          systemInstruction: {
+            parts: [{ text: SYSTEM_PROMPT }],
+          },
+          responseMimeType: "application/json",
+          temperature: 0.1,
+          maxOutputTokens: 8192,
         },
-      ],
-      config: {
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }],
-        },
-        responseMimeType: "application/json",
-        temperature: 0.1,
-        maxOutputTokens: 8192,
-      },
-    });
+      }),
+    );
 
     const raw = response.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!raw) {
@@ -293,5 +299,93 @@ export class AIService {
     }
 
     return result;
+  }
+
+  private async generateContentWithRetry<T>(operation: () => Promise<T>) {
+    const maxRetries = this.getPositiveIntEnv(
+      "AI_MAX_RETRIES",
+      DEFAULT_AI_MAX_RETRIES,
+    );
+    const baseDelayMs = this.getPositiveIntEnv(
+      "AI_RETRY_BASE_DELAY_MS",
+      DEFAULT_AI_RETRY_BASE_DELAY_MS,
+    );
+
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      try {
+        return await this.withTimeout(operation());
+      } catch (error) {
+        lastError = error;
+        if (!this.isRetryableError(error) || attempt === maxRetries) {
+          break;
+        }
+
+        await this.delay(baseDelayMs * (attempt + 1));
+      }
+    }
+
+    throw this.toAIServiceError(lastError);
+  }
+
+  private async withTimeout<T>(promise: Promise<T>): Promise<T> {
+    const timeoutMs = this.getPositiveIntEnv(
+      "AI_REQUEST_TIMEOUT_MS",
+      DEFAULT_AI_REQUEST_TIMEOUT_MS,
+    );
+
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new AppError(
+              `AI evaluation timed out after ${timeoutMs}ms`,
+              504,
+            ),
+          );
+        }, timeoutMs);
+      }),
+    ]);
+  }
+
+  private isRetryableError(error: unknown) {
+    if (error instanceof AppError) {
+      return error.statusCode === 504;
+    }
+
+    const message =
+      error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
+    return (
+      message.includes("503") ||
+      message.includes("429") ||
+      message.includes("unavailable") ||
+      message.includes("rate limit") ||
+      message.includes("timed out") ||
+      message.includes("timeout")
+    );
+  }
+
+  private toAIServiceError(error: unknown) {
+    if (error instanceof AppError) {
+      return error;
+    }
+
+    const message = error instanceof Error ? error.message : "Unknown AI provider error";
+    return new AppError(`AI evaluation failed: ${message}`, 502);
+  }
+
+  private getPositiveIntEnv(name: string, fallback: number) {
+    const raw = process.env[name]?.trim();
+    if (!raw) return fallback;
+
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+  }
+
+  private delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
