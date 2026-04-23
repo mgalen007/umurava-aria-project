@@ -9,7 +9,7 @@ import {
 import { AppError } from "../middleware/error";
 
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-2.5-flash-lite";
 const DEFAULT_AI_REQUEST_TIMEOUT_MS = 45000;
 const DEFAULT_AI_MAX_RETRIES = 2;
 const DEFAULT_AI_RETRY_BASE_DELAY_MS = 1500;
