@@ -125,7 +125,10 @@ export default function ScreeningsPage() {
 
         <section className="screenings-panel">
           <div className="screenings-toolbar">
-            <h1 className="screenings-heading">Screenings</h1>
+            <div className="screenings-toolbar__intro">
+              <p className="screenings-eyebrow">Review center</p>
+              <h1 className="screenings-heading">Screenings</h1>
+            </div>
 
             <div className="screenings-toolbar__controls">
               <label className="screenings-search">
@@ -192,18 +195,40 @@ export default function ScreeningsPage() {
                 return (
                   <article className="screenings-row" key={session._id}>
                     <div className="screenings-row__session">
-                      <span className="screenings-session-label">{session.name}</span>
-                      <span className="screenings-session-title">{getJobTitle(session)}</span>
+                      <span
+                        className="screenings-session-label"
+                        title={session.name}
+                      >
+                        {session.name}
+                      </span>
+                      <span
+                        className="screenings-session-title"
+                        title={getJobTitle(session)}
+                      >
+                        {getJobTitle(session)}
+                      </span>
                     </div>
-                    <div className="screenings-row__date">{formatRelativeDate(session.createdAt)}</div>
+                    <div
+                      className="screenings-row__date"
+                      title={formatRelativeDate(session.createdAt)}
+                    >
+                      {formatRelativeDate(session.createdAt)}
+                    </div>
                     <div className="screenings-row__number">{session.candidateIds.length}</div>
-                    <div>
+                    <div className="screenings-row__score">
                       <span className={`screenings-score-pill screenings-score-pill--${topScore >= 80 ? 'green' : topScore >= 50 ? 'orange' : 'blue'}`}>
                         {topScore}%
                       </span>
                     </div>
                     <div className={`screenings-row__number ${overrides > 0 ? 'is-warning' : ''}`}>{overrides}</div>
-                    <div className={`screenings-status screenings-status--${session.status.toLowerCase()}`}>{statusLabel}</div>
+                    <div className="screenings-row__status">
+                      <span
+                        className={`screenings-status screenings-status--${session.status.toLowerCase()}`}
+                        title={statusLabel}
+                      >
+                        {statusLabel}
+                      </span>
+                    </div>
                     <div className="screenings-row__action">
                       {session.status === 'processing' ? (
                         <button type="button" className="screenings-action-btn screenings-action-btn--secondary" disabled>
