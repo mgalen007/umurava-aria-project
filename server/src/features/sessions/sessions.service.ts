@@ -188,17 +188,43 @@ export class SessionsService {
       throw new AppError('Session has not completed yet', 400);
     }
 
-    const result = session.rankedResults.find(
+    const existingResult = session.rankedResults.find(
       (r) => r.candidateId.toString() === candidateId.toString()
     );
-    if (!result) throw new AppError('Candidate not found in this session', 404);
-
-    result.feedbackStatus = data.action;
-    if (data.action === 'overridden' && data.adjustedScore !== undefined) {
-      result.finalScore = data.adjustedScore;
+    if (!existingResult) throw new AppError('Candidate not found in this session', 404);
+    if (existingResult.feedbackStatus !== 'pending') {
+      throw new AppError('Feedback has already been submitted for this candidate', 409);
     }
 
-    await session.save();
+    const nextFinalScore =
+      data.action === 'overridden' && data.adjustedScore !== undefined
+        ? data.adjustedScore
+        : existingResult.finalScore;
+
+    const updatedSession = await Session.findOneAndUpdate(
+      {
+        _id: parsedSessionId,
+        createdBy,
+        status: 'completed',
+        rankedResults: {
+          $elemMatch: {
+            candidateId,
+            feedbackStatus: 'pending',
+          },
+        },
+      },
+      {
+        $set: {
+          'rankedResults.$.feedbackStatus': data.action,
+          'rankedResults.$.finalScore': nextFinalScore,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedSession) {
+      throw new AppError('Feedback has already been submitted for this candidate', 409);
+    }
 
     await Candidate.findOneAndUpdate(
       {
@@ -207,7 +233,7 @@ export class SessionsService {
       },
       {
         $set: {
-          'evaluationHistory.$.finalScore': result.finalScore,
+          'evaluationHistory.$.finalScore': nextFinalScore,
         },
       }
     );
