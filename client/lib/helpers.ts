@@ -74,11 +74,15 @@ export function formatExperienceLevel(level: Job['experienceLevel']) {
 }
 
 export function getJobId(session: Session) {
-  return typeof session.jobId === 'string' ? session.jobId : (session.jobId._id ?? '');
+  if (typeof session.jobId === 'string') return session.jobId;
+  if (!session.jobId || typeof session.jobId !== 'object') return '';
+  return '_id' in session.jobId && typeof session.jobId._id === 'string' ? session.jobId._id : '';
 }
 
 export function getJobTitle(session: Session) {
-  return typeof session.jobId === 'string' ? 'Unknown job' : session.jobId.title;
+  if (typeof session.jobId === 'string') return 'Unknown job';
+  if (!session.jobId || typeof session.jobId !== 'object') return 'Unknown job';
+  return typeof session.jobId.title === 'string' ? session.jobId.title : 'Unknown job';
 }
 
 export function getSessionCandidateCount(session: Session) {

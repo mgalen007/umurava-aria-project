@@ -24,7 +24,7 @@ export class JobsService {
     const job = await Job.findOneAndUpdate(
       { _id: id, createdBy },
       data,
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!job) throw new AppError('Job not found', 404);
     return job;

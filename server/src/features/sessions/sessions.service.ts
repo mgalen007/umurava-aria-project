@@ -80,7 +80,7 @@ export class SessionsService {
           processingTimeMs: undefined,
         },
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!session) {
@@ -219,7 +219,7 @@ export class SessionsService {
           'rankedResults.$.finalScore': nextFinalScore,
         },
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!updatedSession) {

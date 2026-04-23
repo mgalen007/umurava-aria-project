@@ -8,7 +8,7 @@ import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { SessionResultsPageSkeleton } from '@/components/skeletons/PageSkeletons';
 import { ApiError, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { buildCandidateCvUrl, formatSessionStatus, getCandidateName } from '@/lib/helpers';
+import { buildCandidateCvUrl, formatSessionStatus, getCandidateName, getJobTitle } from '@/lib/helpers';
 import type { RankedResult, Session, SessionCandidate } from '@/lib/types';
 import './results.css';
 
@@ -158,7 +158,7 @@ export default function ScreeningSessionPage({
   }
 
   const featuredScore = activeResult.finalScore;
-  const jobTitle = typeof session.jobId === 'string' ? 'Job' : session.jobId.title;
+  const jobTitle = getJobTitle(session);
   const activeCandidateSkills = activeCandidate.skills ?? [];
 
   return (

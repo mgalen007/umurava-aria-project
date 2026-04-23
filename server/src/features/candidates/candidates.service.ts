@@ -48,7 +48,7 @@ export class CandidatesService {
     const candidate = await Candidate.findOneAndUpdate(
       { _id: id, uploadedBy },
       data,
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!candidate) throw new AppError('Candidate not found', 404);
     return candidate;
