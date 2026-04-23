@@ -20,8 +20,8 @@ const SessionSchema = new Schema<ISession>(
     batchSummary:    { type: Schema.Types.Mixed },
     modelUsed: {
       type: String,
-      enum: ['gemini-1.5-flash', 'gemini-1.5-pro'],
-      default: 'gemini-1.5-flash',
+      enum: ['gemini-2.5-flash', 'gemini-1.5-pro'],
+      default: 'gemini-2.5-flash',
     },
     promptVersion:    { type: String, default: 'v1.0' },
     processingTimeMs: { type: Number },

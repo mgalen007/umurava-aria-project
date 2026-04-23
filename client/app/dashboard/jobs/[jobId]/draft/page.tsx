@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { FileText, MapPin, Pencil, ShieldAlert, Sparkles } from 'lucide-react';
 import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
@@ -12,7 +13,13 @@ import { formatExperienceLevel } from '@/lib/helpers';
 import type { Job } from '@/lib/types';
 import './draft.css';
 
-export default function JobDraftPage({ params }: { params: { jobId: string } }) {
+export default function JobDraftPage({
+  params: _params,
+}: {
+  params: Promise<{ jobId: string }>;
+}) {
+  const routeParams = useParams<{ jobId: string }>();
+  const jobId = typeof routeParams?.jobId === 'string' ? routeParams.jobId : '';
   const { token } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -20,15 +27,15 @@ export default function JobDraftPage({ params }: { params: { jobId: string } }) 
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !jobId) return;
 
-    api.getJob(params.jobId, token)
+    api.getJob(jobId, token)
       .then((result) => {
         setJob(result);
         setDescription(result.description);
       })
       .catch((err) => setStatusMessage(err instanceof ApiError ? err.message : 'Unable to load job.'));
-  }, [params.jobId, token]);
+  }, [jobId, token]);
 
   async function saveChanges() {
     if (!token || !job) return;
@@ -71,7 +78,7 @@ export default function JobDraftPage({ params }: { params: { jobId: string } }) 
                 <Pencil size={16} />
                 {isEditing ? 'Close editor' : 'Edit job'}
               </button>
-              <Link href={`/dashboard/jobs/${params.jobId}`} className="draft-secondary-btn">
+              <Link href={`/dashboard/jobs/${jobId}`} className="draft-secondary-btn">
                 Back to job
               </Link>
             </div>

@@ -108,7 +108,8 @@ export default function LoginPage() {
                   width={20}
                   height={20}
                   className="google-icon"
-                />
+                  priority
+                                  />
               </button>
 
               <p className="login-switch">

@@ -1,40 +1,96 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Eye, FileSearch, PanelRightOpen, Search, X } from 'lucide-react';
-import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
-import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
-import { ApplicantsPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { ApiError, api } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
-import { buildCandidateCvUrl, formatRelativeDate, formatSessionStatus, getCandidateName, getJobId } from '@/lib/helpers';
-import type { Candidate, Job, Session } from '@/lib/types';
-import './applicants.css';
+import React, {
+  ChangeEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import {
+  Eye,
+  FileSearch,
+  PanelRightOpen,
+  Search,
+  UploadCloud,
+  X,
+} from "lucide-react";
+import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
+import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
+import { ApplicantsPageSkeleton } from "@/components/skeletons/PageSkeletons";
+import { ApiError, api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import {
+  buildCandidateCvUrl,
+  formatRelativeDate,
+  formatSessionStatus,
+  getCandidateName,
+  getJobId,
+} from "@/lib/helpers";
+import type { Candidate, Job, Session } from "@/lib/types";
+import "./applicants.css";
 
-export default function JobApplicantsPage({ params }: { params: { jobId: string } }) {
+export default function JobApplicantsPage({
+}: {
+  params: Promise<{ jobId: string }>;
+}) {
+  const routeParams = useParams<{ jobId: string }>();
+  const jobId = typeof routeParams?.jobId === "string" ? routeParams.jobId : "";
   const { token } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [allCandidates, setAllCandidates] = useState<Candidate[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSessionsOpen, setIsSessionsOpen] = useState(false);
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [bannerFailures, setBannerFailures] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement | null>(null);
+  const csvInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !jobId) return;
 
-    Promise.all([api.getJob(params.jobId, token), api.getCandidates(token), api.getSessions(token)])
+    Promise.all([
+      api.getJob(jobId, token),
+      api.getCandidates(token),
+      api.getSessions(token),
+    ])
       .then(([jobResult, candidatesResult, sessionsResult]) => {
         setJob(jobResult);
         setAllCandidates(candidatesResult);
-        setSessions(sessionsResult.filter((session) => getJobId(session) === params.jobId));
+        setSessions(
+          sessionsResult.filter(
+            (session) => getJobId(session) === jobId,
+          ),
+        );
       })
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load job workspace.'));
-  }, [params.jobId, token]);
+      .catch((err) =>
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "Unable to load job workspace.",
+        ),
+      );
+  }, [jobId, token]);
+
+  async function refreshWorkspace() {
+    if (!token || !jobId) return;
+
+    const [candidatesResult, sessionsResult] = await Promise.all([
+      api.getCandidates(token),
+      api.getSessions(token),
+    ]);
+    setAllCandidates(candidatesResult);
+    setSessions(
+      sessionsResult.filter((session) => getJobId(session) === jobId),
+    );
+  }
 
   const filteredApplicants = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -46,7 +102,7 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
         candidate.email,
         candidate.location,
         candidate.headline,
-      ].some((value) => value.toLowerCase().includes(query))
+      ].some((value) => value.toLowerCase().includes(query)),
     );
   }, [allCandidates, searchQuery]);
 
@@ -54,47 +110,151 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
   const hasApplicants = allCandidates.length > 0;
   const hasFilteredApplicants = filteredApplicants.length > 0;
   const allVisibleSelected =
-    hasFilteredApplicants && filteredApplicants.every((candidate) => selectedIds.includes(candidate._id));
+    hasFilteredApplicants &&
+    filteredApplicants.every((candidate) =>
+      selectedIds.includes(candidate._id),
+    );
 
   function toggleApplicantSelection(candidateId: string) {
     setSelectedIds((current) =>
-      current.includes(candidateId) ? current.filter((id) => id !== candidateId) : [...current, candidateId]
+      current.includes(candidateId)
+        ? current.filter((id) => id !== candidateId)
+        : [...current, candidateId],
     );
   }
 
   function toggleSelectAllVisible() {
     if (allVisibleSelected) {
-      const visibleIds = new Set(filteredApplicants.map((candidate) => candidate._id));
+      const visibleIds = new Set(
+        filteredApplicants.map((candidate) => candidate._id),
+      );
       setSelectedIds((current) => current.filter((id) => !visibleIds.has(id)));
       return;
     }
 
-    const merged = new Set([...selectedIds, ...filteredApplicants.map((candidate) => candidate._id)]);
+    const merged = new Set([
+      ...selectedIds,
+      ...filteredApplicants.map((candidate) => candidate._id),
+    ]);
     setSelectedIds(Array.from(merged));
   }
 
   async function handleScreenSelected() {
     if (selectedCount === 0 || !token) return;
 
+    const validSelectedIds = selectedIds.filter(
+      (id): id is string =>
+        typeof id === "string" &&
+        id.trim().length > 0 &&
+        allCandidates.some((candidate) => candidate._id === id),
+    );
+
+    if (validSelectedIds.length === 0) {
+      setBannerFailures([]);
+      setBannerMessage(
+        "No valid candidates are currently selected. Refresh the workspace and try again.",
+      );
+      return;
+    }
+
     setIsRunning(true);
+    setBannerFailures([]);
     try {
       const session = await api.createSession(
         {
-          jobId: params.jobId,
+          jobId,
           name: `Session ${new Date().toLocaleString()}`,
-          candidateIds: selectedIds,
-          modelUsed: 'gemini-3.1-flash-lite-preview',
+          candidateIds: validSelectedIds,
+          modelUsed: "gemini-2.5-flash",
         },
-        token
+        token,
       );
       await api.runSession(session._id, token);
       const nextSessions = await api.getSessions(token);
-      setSessions(nextSessions.filter((item) => getJobId(item) === params.jobId));
-      setBannerMessage(`Screening started for ${selectedCount} candidate${selectedCount > 1 ? 's' : ''}.`);
+      setSessions(
+        nextSessions.filter((item) => getJobId(item) === jobId),
+      );
+      setBannerMessage(
+        `Screening started for ${validSelectedIds.length} candidate${validSelectedIds.length > 1 ? "s" : ""}.`,
+      );
     } catch (err) {
-      setBannerMessage(err instanceof ApiError ? err.message : 'Unable to start screening.');
+      setBannerMessage(
+        err instanceof ApiError ? err.message : "Unable to start screening.",
+      );
     } finally {
       setIsRunning(false);
+    }
+  }
+
+  async function handleCsvUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !token) return;
+
+    setIsUploading(true);
+    setBannerMessage(null);
+    setBannerFailures([]);
+    try {
+      const result = await api.ingestCandidateCsv(file, token);
+      await refreshWorkspace();
+      if (result.succeeded.length > 0) {
+        setSelectedIds((current) => {
+          const merged = new Set([
+            ...current,
+            ...result.succeeded.map((candidate) => candidate._id),
+          ]);
+          return Array.from(merged);
+        });
+      }
+      setBannerMessage(
+        `Imported ${result.succeeded.length} candidate${result.succeeded.length === 1 ? "" : "s"} for ${job?.title ?? "this role"}. Newly imported candidates were selected automatically.`,
+      );
+      setBannerFailures(result.failed);
+    } catch (err) {
+      setBannerMessage(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to import CSV candidates for this job.",
+      );
+      setBannerFailures([]);
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handlePdfUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = event.target.files;
+    if (!files?.length || !token) return;
+
+    setIsUploading(true);
+    setBannerMessage(null);
+    setBannerFailures([]);
+    try {
+      const result = await api.ingestCandidatePdfs(files, token);
+      await refreshWorkspace();
+      if (result.succeeded.length > 0) {
+        setSelectedIds((current) => {
+          const merged = new Set([
+            ...current,
+            ...result.succeeded.map((candidate) => candidate._id),
+          ]);
+          return Array.from(merged);
+        });
+      }
+      setBannerMessage(
+        `Imported ${result.succeeded.length} resume${result.succeeded.length === 1 ? "" : "s"} for ${job?.title ?? "this role"}. Newly imported candidates were selected automatically.`,
+      );
+      setBannerFailures(result.failed);
+    } catch (err) {
+      setBannerMessage(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to import resumes for this job.",
+      );
+      setBannerFailures([]);
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
     }
   }
 
@@ -109,33 +269,46 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
   return (
     <PageSkeletonGate skeleton={<ApplicantsPageSkeleton />}>
       <div className="page-container applicants-page">
-        <DashboardTopBar breadcrumbs={['Jobs', 'Applicants']} />
+        <DashboardTopBar breadcrumbs={["Jobs", "Applicants"]} />
 
         <section className="applicants-shell">
           <div className="applicants-header">
             <div>
               <p className="applicants-eyebrow">Applicants workspace</p>
-              <h1 className="applicants-title">Candidate pipeline for {job?.title ?? 'Job'}</h1>
+              <h1 className="applicants-title">
+                Candidate pipeline for {job?.title ?? "Job"}
+              </h1>
               <p className="applicants-subtitle">
-                Select imported candidates, launch screening sessions, and review previous runs for this role.
+                Import candidates for this role, select who should be screened,
+                and review previous runs for this job.
               </p>
             </div>
 
             <div className="applicants-summary">
               <article className="applicants-summary-card">
-                <span className="applicants-summary-card__label">Candidates</span>
-                <strong className="applicants-summary-card__value">{allCandidates.length}</strong>
+                <span className="applicants-summary-card__label">
+                  Candidates
+                </span>
+                <strong className="applicants-summary-card__value">
+                  {allCandidates.length}
+                </strong>
               </article>
               <article className="applicants-summary-card">
                 <span className="applicants-summary-card__label">Selected</span>
-                <strong className="applicants-summary-card__value">{selectedCount}</strong>
+                <strong className="applicants-summary-card__value">
+                  {selectedCount}
+                </strong>
               </article>
             </div>
           </div>
 
           <div className="applicants-toolbar">
             <label className="applicants-search">
-              <Search size={18} className="applicants-search__icon" aria-hidden />
+              <Search
+                size={18}
+                className="applicants-search__icon"
+                aria-hidden
+              />
               <input
                 type="search"
                 className="applicants-search__input"
@@ -147,13 +320,33 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
 
             <div className="applicants-toolbar__controls">
               <button
+                className="applicants-action-btn applicants-action-btn--ghost"
+                type="button"
+                onClick={() => pdfInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <UploadCloud size={16} />
+                {isUploading ? "Uploading..." : "Upload PDFs"}
+              </button>
+
+              <button
+                className="applicants-action-btn applicants-action-btn--ghost"
+                type="button"
+                onClick={() => csvInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <UploadCloud size={16} />
+                {isUploading ? "Uploading..." : "Import CSV"}
+              </button>
+
+              <button
                 className="applicants-action-btn applicants-action-btn--secondary"
                 type="button"
                 onClick={handleScreenSelected}
                 disabled={selectedCount === 0 || isRunning}
               >
                 <FileSearch size={16} />
-                {isRunning ? 'Starting...' : 'Scan selected'}
+                {isRunning ? "Starting..." : "Scan selected"}
               </button>
 
               <button
@@ -165,16 +358,49 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
                 Previous sessions
               </button>
 
-              <Link href={`/dashboard/jobs/${params.jobId}/draft`} className="applicants-action-btn applicants-action-btn--ghost">
+              <Link
+                href={`/dashboard/jobs/${jobId}/draft`}
+                className="applicants-action-btn applicants-action-btn--ghost"
+              >
                 View job
               </Link>
             </div>
           </div>
 
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            multiple
+            hidden
+            onChange={handlePdfUpload}
+          />
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            hidden
+            onChange={handleCsvUpload}
+          />
+
           {bannerMessage ? (
             <div className="applicants-banner" role="status">
-              <span>{bannerMessage}</span>
-              <button type="button" className="applicants-banner__close" onClick={() => setBannerMessage(null)} aria-label="Dismiss message">
+              <div>
+                <div>{bannerMessage}</div>
+                {bannerFailures.length > 0 ? (
+                  <div style={{ marginTop: "0.5rem" }}>
+                    {bannerFailures.map((failure, index) => (
+                      <div key={`${failure}-${index}`}>{failure}</div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className="applicants-banner__close"
+                onClick={() => setBannerMessage(null)}
+                aria-label="Dismiss message"
+              >
                 <X size={16} />
               </button>
             </div>
@@ -185,7 +411,8 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
           <div className="applicants-table-shell">
             <div className="applicants-table-meta">
               <span>
-                Showing {filteredApplicants.length} of {allCandidates.length} candidate{allCandidates.length === 1 ? '' : 's'}
+                Showing {filteredApplicants.length} of {allCandidates.length}{" "}
+                candidate{allCandidates.length === 1 ? "" : "s"}
               </span>
               <span>{selectedCount} selected</span>
             </div>
@@ -214,20 +441,30 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
                   {filteredApplicants.map((candidate) => {
                     const isSelected = selectedIds.includes(candidate._id);
                     return (
-                      <tr key={candidate._id} className={isSelected ? 'is-selected' : ''}>
+                      <tr
+                        key={candidate._id}
+                        className={isSelected ? "is-selected" : ""}
+                      >
                         <td className="applicants-table__checkbox-col">
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => toggleApplicantSelection(candidate._id)}
+                            onChange={() =>
+                              toggleApplicantSelection(candidate._id)
+                            }
                             aria-label={`Select ${getCandidateName(candidate)}`}
                           />
                         </td>
                         <td className="applicant-name-cell">
-                          <span className="applicant-name">{getCandidateName(candidate)}</span>
+                          <span className="applicant-name">
+                            {getCandidateName(candidate)}
+                          </span>
                         </td>
                         <td>
-                          <a href={`mailto:${candidate.email}`} className="applicant-link">
+                          <a
+                            href={`mailto:${candidate.email}`}
+                            className="applicant-link"
+                          >
                             {candidate.email}
                           </a>
                         </td>
@@ -274,18 +511,26 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
         </section>
 
         <div
-          className={`sessions-drawer-backdrop ${isSessionsOpen ? 'is-open' : ''}`}
+          className={`sessions-drawer-backdrop ${isSessionsOpen ? "is-open" : ""}`}
           onClick={() => setIsSessionsOpen(false)}
           aria-hidden={!isSessionsOpen}
         />
 
-        <aside className={`sessions-drawer ${isSessionsOpen ? 'is-open' : ''}`} aria-hidden={!isSessionsOpen}>
+        <aside
+          className={`sessions-drawer ${isSessionsOpen ? "is-open" : ""}`}
+          aria-hidden={!isSessionsOpen}
+        >
           <div className="sessions-drawer__header">
             <div>
               <p className="sessions-drawer__eyebrow">History</p>
               <h2 className="sessions-drawer__title">Previous sessions</h2>
             </div>
-            <button type="button" className="sessions-drawer__close" onClick={() => setIsSessionsOpen(false)} aria-label="Close previous sessions">
+            <button
+              type="button"
+              className="sessions-drawer__close"
+              onClick={() => setIsSessionsOpen(false)}
+              aria-label="Close previous sessions"
+            >
               <X size={18} />
             </button>
           </div>
@@ -301,27 +546,41 @@ export default function JobApplicantsPage({ params }: { params: { jobId: string 
                   <div className="session-card__top">
                     <div>
                       <p className="session-card__label">{session.name}</p>
-                      <h3 className="session-card__date">{formatRelativeDate(session.createdAt)}</h3>
+                      <h3 className="session-card__date">
+                        {formatRelativeDate(session.createdAt)}
+                      </h3>
                     </div>
-                    <span className={session.status === 'pending' ? 'status-badge-draft' : 'status-badge-active'}>
+                    <span
+                      className={
+                        session.status === "pending"
+                          ? "status-badge-draft"
+                          : "status-badge-active"
+                      }
+                    >
                       {formatSessionStatus(session.status)}
                     </span>
                   </div>
 
                   <div className="session-card__metrics">
                     <div className="session-card__metric">
-                      <span className="session-card__metric-label">Candidates</span>
+                      <span className="session-card__metric-label">
+                        Candidates
+                      </span>
                       <strong>{session.candidateIds.length}</strong>
                     </div>
                     <div className="session-card__metric">
-                      <span className="session-card__metric-label">Top score</span>
-                      <strong>{session.rankedResults[0]?.finalScore ?? 0}%</strong>
+                      <span className="session-card__metric-label">
+                        Top score
+                      </span>
+                      <strong>
+                        {session.rankedResults[0]?.finalScore ?? 0}%
+                      </strong>
                     </div>
                   </div>
 
                   <Link
-                    href={`/dashboard/jobs/${params.jobId}/session/${session._id}`}
-                    className={`session-link ${session.status === 'pending' ? 'is-pending' : ''}`}
+                    href={`/dashboard/jobs/${jobId}/session/${session._id}`}
+                    className={`session-link ${session.status === "pending" ? "is-pending" : ""}`}
                     onClick={() => setIsSessionsOpen(false)}
                   >
                     View results
