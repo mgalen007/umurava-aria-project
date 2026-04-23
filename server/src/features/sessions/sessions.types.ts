@@ -26,7 +26,7 @@ export interface Citation {
     | "education_certifications"
     | "cultural_relevance_fit";
   evidence: string;
-  sourceSection: string;
+  source_section: string;
   impact: string;
 }
 
@@ -38,11 +38,11 @@ export interface ScoreBreakdown {
 }
 
 export interface BatchSummary {
-  recommendedForInterview: string[];
-  holdPool: string[];
-  notAdvancing: string[];
-  topDifferentiator: string;
-  talentPoolQuality: "HIGH" | "MEDIUM" | "LOW";
+  recommended_for_interview: string[];
+  hold_pool: string[];
+  not_advancing: string[];
+  top_differentiator: string;
+  talent_pool_quality: "HIGH" | "MEDIUM" | "LOW";
 }
 
 export interface ISession extends Document {
