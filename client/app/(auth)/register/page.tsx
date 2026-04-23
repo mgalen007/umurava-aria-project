@@ -69,10 +69,13 @@ export default function RegisterPage() {
                     type="text"
                     className="register-input"
                     placeholder="Enter your first name"
-                    value={firstName}
-                    onChange={(event) => setFirstName(event.target.value)}
-                    autoComplete="given-name"
-                  />
+                  value={firstName}
+                  onChange={(event) => {
+                    setFirstName(event.target.value);
+                    if (error) setError(null);
+                  }}
+                  autoComplete="given-name"
+                />
                 </div>
 
                 <div className="input-group register-input-group">
@@ -84,10 +87,13 @@ export default function RegisterPage() {
                     type="text"
                     className="register-input"
                     placeholder="Enter your last name"
-                    value={lastName}
-                    onChange={(event) => setLastName(event.target.value)}
-                    autoComplete="family-name"
-                  />
+                  value={lastName}
+                  onChange={(event) => {
+                    setLastName(event.target.value);
+                    if (error) setError(null);
+                  }}
+                  autoComplete="family-name"
+                />
                 </div>
               </div>
 
@@ -101,7 +107,10 @@ export default function RegisterPage() {
                   className="register-input"
                   placeholder="Choose a username"
                   value={username}
-                  onChange={(event) => setUsername(event.target.value)}
+                  onChange={(event) => {
+                    setUsername(event.target.value);
+                    if (error) setError(null);
+                  }}
                   autoComplete="username"
                 />
               </div>
@@ -116,7 +125,10 @@ export default function RegisterPage() {
                   className="register-input"
                   placeholder="Enter your email address"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    if (error) setError(null);
+                  }}
                   autoComplete="email"
                 />
               </div>
@@ -131,7 +143,10 @@ export default function RegisterPage() {
                   className="register-input"
                   placeholder="Create a password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    if (error) setError(null);
+                  }}
                   autoComplete="new-password"
                 />
               </div>

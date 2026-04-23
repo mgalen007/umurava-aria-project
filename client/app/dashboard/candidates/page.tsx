@@ -21,10 +21,23 @@ export default function CandidatesPage() {
 
   useEffect(() => {
     if (!token) return;
+    let isActive = true;
+    setError(null);
 
     api.getCandidates(token)
-      .then(setCandidates)
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load candidates.'));
+      .then((result) => {
+        if (!isActive) return;
+        setCandidates(result);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!isActive) return;
+        setError(err instanceof ApiError ? err.message : 'Unable to load candidates.');
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [token]);
 
   const filteredCandidates = useMemo(() => {
@@ -54,6 +67,20 @@ export default function CandidatesPage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const nextSelected = candidates.find((candidate) => candidate._id === selected._id) ?? null;
+    if (!nextSelected) {
+      setSelected(null);
+      return;
+    }
+
+    if (nextSelected !== selected) {
+      setSelected(nextSelected);
+    }
+  }, [candidates, selected]);
 
   return (
     <PageSkeletonGate skeleton={<CandidatesPageSkeleton />}>
@@ -119,7 +146,7 @@ export default function CandidatesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCandidates.map((candidate) => (
+                  {!error ? filteredCandidates.map((candidate) => (
                     <tr key={candidate._id}>
                       <td>
                         <div className="candidate-cell">
@@ -173,12 +200,16 @@ export default function CandidatesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )) : null}
 
-                  {filteredCandidates.length === 0 ? (
+                  {!error && filteredCandidates.length === 0 ? (
                     <tr>
                       <td colSpan={7}>
-                        <div className="candidates-empty">No candidates match your current search.</div>
+                        <div className="candidates-empty">
+                          {candidates.length === 0
+                            ? 'No candidates have been added to your workspace yet.'
+                            : 'No candidates match your current search.'}
+                        </div>
                       </td>
                     </tr>
                   ) : null}

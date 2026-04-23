@@ -20,12 +20,23 @@ export default function JobsPage() {
 
   useEffect(() => {
     if (!token) return;
+    let isActive = true;
+    setError(null);
 
     api.getJobs(token)
-      .then(setJobs)
+      .then((result) => {
+        if (!isActive) return;
+        setJobs(result);
+        setError(null);
+      })
       .catch((err) => {
+        if (!isActive) return;
         setError(err instanceof ApiError ? err.message : 'Unable to load jobs.');
       });
+
+    return () => {
+      isActive = false;
+    };
   }, [token]);
 
   const sortedJobs = useMemo(() => {
@@ -68,12 +79,12 @@ export default function JobsPage() {
           {error ? <p>{error}</p> : null}
 
           <div className="jobs-grid">
-            {sortedJobs.length === 0 ? (
+            {!error && sortedJobs.length === 0 ? (
               <div className="jobs-empty-state">
                 No jobs have been created yet. Create a new job to start importing and screening candidates.
               </div>
             ) : null}
-            {sortedJobs.map((job) => (
+            {!error ? sortedJobs.map((job) => (
               <article className="job-card" key={job._id}>
                 <div className="job-card-header">
                   <h2 className="job-title">{job.title}</h2>
@@ -99,7 +110,7 @@ export default function JobsPage() {
                   </Link>
                 </div>
               </article>
-            ))}
+            )) : null}
           </div>
         </section>
       </div>

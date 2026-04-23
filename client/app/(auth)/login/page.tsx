@@ -60,7 +60,10 @@ export default function LoginPage() {
                   className="login-input"
                   placeholder="Enter your username"
                   value={identifier}
-                  onChange={(event) => setIdentifier(event.target.value)}
+                  onChange={(event) => {
+                    setIdentifier(event.target.value);
+                    if (error) setError(null);
+                  }}
                   autoComplete="username"
                 />
               </div>
@@ -75,7 +78,10 @@ export default function LoginPage() {
                   className="login-input"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    if (error) setError(null);
+                  }}
                   autoComplete="current-password"
                 />
               </div>

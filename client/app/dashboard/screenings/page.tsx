@@ -25,10 +25,23 @@ export default function ScreeningsPage() {
 
   useEffect(() => {
     if (!token) return;
+    let isActive = true;
+    setError(null);
 
     api.getSessions(token)
-      .then(setSessions)
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Unable to load screening sessions.'));
+      .then((result) => {
+        if (!isActive) return;
+        setSessions(result);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!isActive) return;
+        setError(err instanceof ApiError ? err.message : 'Unable to load screening sessions.');
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [token]);
 
   const jobOptions = useMemo(() => {
@@ -172,7 +185,7 @@ export default function ScreeningsPage() {
             </div>
 
             <div className="screenings-table-body">
-              {paginatedRows.map((session) => {
+              {!error ? paginatedRows.map((session) => {
                 const topScore = session.rankedResults[0]?.finalScore ?? 0;
                 const overrides = session.rankedResults.filter((result) => result.feedbackStatus === 'overridden').length;
                 const statusLabel = formatSessionStatus(session.status);
@@ -204,9 +217,15 @@ export default function ScreeningsPage() {
                     </div>
                   </article>
                 );
-              })}
+              }) : null}
 
-              {paginatedRows.length === 0 ? <div className="screenings-empty">No screenings match your filters.</div> : null}
+              {!error && paginatedRows.length === 0 ? (
+                <div className="screenings-empty">
+                  {sessions.length === 0
+                    ? 'No screening sessions have been created yet.'
+                    : 'No screenings match your filters.'}
+                </div>
+              ) : null}
             </div>
 
             <div className="screenings-footer">

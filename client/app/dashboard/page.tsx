@@ -96,15 +96,24 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!token) return;
+    let isActive = true;
+    setError(null);
 
     Promise.all([api.getJobs(token), api.getSessions(token)])
       .then(([jobsResult, sessionsResult]) => {
+        if (!isActive) return;
         setJobs(jobsResult);
         setSessions(sessionsResult);
+        setError(null);
       })
       .catch((err) => {
+        if (!isActive) return;
         setError(err instanceof ApiError ? err.message : 'Unable to load dashboard data.');
       });
+
+    return () => {
+      isActive = false;
+    };
   }, [token]);
 
   const overviewRows = useMemo(() => buildOverviewRows(jobs, sessions), [jobs, sessions]);
@@ -121,8 +130,8 @@ export default function DashboardPage() {
             Your workspace is empty right now. Create a job and run a screening session to start seeing dashboard insights.
           </div>
         ) : null}
-        <DashboardOverviewSection rows={overviewRows} />
-        <DashboardCharts volumeSeries={volumeSeries} shortlistByRole={shortlistByRole} />
+        {!error ? <DashboardOverviewSection rows={overviewRows} /> : null}
+        {!error ? <DashboardCharts volumeSeries={volumeSeries} shortlistByRole={shortlistByRole} /> : null}
       </div>
     </PageSkeletonGate>
   );
