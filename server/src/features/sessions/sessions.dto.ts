@@ -10,7 +10,13 @@ export const createSessionDto = z.object({
         .trim()
         .min(1, "Candidate ID is required")
     )
-    .min(1, "At least one candidate is required"),
+    .min(1, "At least one candidate is required")
+    .refine(
+      (candidateIds) => new Set(candidateIds).size === candidateIds.length,
+      {
+        message: "Candidate IDs must be unique",
+      },
+    ),
   modelUsed: z
     .enum(["gemini-2.5-flash", "gemini-1.5-pro"])
     .default("gemini-2.5-flash"),

@@ -16,12 +16,22 @@ export class SessionsService {
       .populate('candidateIds', 'firstName lastName email headline location');
   }
 
+  private parseObjectId(value: string, label: string) {
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+      throw new AppError(`${label} is invalid`, 400);
+    }
+
+    return new mongoose.Types.ObjectId(value);
+  }
+
   async create(data: CreateSessionDto, createdBy: string) {
+    const jobId = this.parseObjectId(data.jobId, 'Job ID');
     const job = await Job.findOne({ _id: data.jobId, createdBy });
     if (!job) throw new AppError('Job not found', 404);
 
-    const candidateIds = data.candidateIds.map(
-      (id) => new mongoose.Types.ObjectId(id)
+    const uniqueCandidateIds = Array.from(new Set(data.candidateIds));
+    const candidateIds = uniqueCandidateIds.map(
+      (id) => this.parseObjectId(id, 'Candidate ID')
     );
 
     const candidates = await Candidate.find({
@@ -33,10 +43,21 @@ export class SessionsService {
       throw new AppError('No valid candidates found', 404);
     }
 
+    const candidatesById = new Map(
+      candidates.map((candidate) => [candidate._id.toString(), candidate]),
+    );
+    const orderedCandidates = uniqueCandidateIds
+      .map((id) => candidatesById.get(id))
+      .filter((candidate): candidate is (typeof candidates)[number] => Boolean(candidate));
+
+    if (orderedCandidates.length === 0) {
+      throw new AppError('No valid candidates found', 404);
+    }
+
     const session = await Session.create({
-      jobId:        job._id,
+      jobId,
       name:         data.name,
-      candidateIds: candidates.map((c) => c._id),
+      candidateIds: orderedCandidates.map((candidate) => candidate._id),
       modelUsed:    data.modelUsed,
       createdBy,
     });
@@ -45,9 +66,10 @@ export class SessionsService {
   }
 
   async run(sessionId: string, createdBy: string) {
+    const parsedSessionId = this.parseObjectId(sessionId, 'Session ID');
     const session = await Session.findOneAndUpdate(
       {
-        _id: sessionId,
+        _id: parsedSessionId,
         createdBy,
         status: { $ne: 'processing' },
       },
@@ -62,7 +84,7 @@ export class SessionsService {
     );
 
     if (!session) {
-      const existingSession = await Session.findOne({ _id: sessionId, createdBy }).select('status');
+      const existingSession = await Session.findOne({ _id: parsedSessionId, createdBy }).select('status');
       if (!existingSession) throw new AppError('Session not found', 404);
       if (existingSession.status === 'processing') {
         throw new AppError('Session is already running', 409);
@@ -145,8 +167,9 @@ export class SessionsService {
   }
 
   async findOne(sessionId: string, createdBy: string) {
+    const parsedSessionId = this.parseObjectId(sessionId, 'Session ID');
     const session = await this.populateSessionQuery(
-      Session.findOne({ _id: sessionId, createdBy })
+      Session.findOne({ _id: parsedSessionId, createdBy })
     );
     if (!session) throw new AppError('Session not found', 404);
     return session;
@@ -157,14 +180,16 @@ export class SessionsService {
     data: FeedbackDto,
     createdBy: string
   ) {
-    const session = await Session.findOne({ _id: sessionId, createdBy });
+    const parsedSessionId = this.parseObjectId(sessionId, 'Session ID');
+    const candidateId = this.parseObjectId(data.candidateId, 'Candidate ID');
+    const session = await Session.findOne({ _id: parsedSessionId, createdBy });
     if (!session) throw new AppError('Session not found', 404);
     if (session.status !== 'completed') {
       throw new AppError('Session has not completed yet', 400);
     }
 
     const result = session.rankedResults.find(
-      (r) => r.candidateId.toString() === data.candidateId
+      (r) => r.candidateId.toString() === candidateId.toString()
     );
     if (!result) throw new AppError('Candidate not found in this session', 404);
 
@@ -177,8 +202,8 @@ export class SessionsService {
 
     await Candidate.findOneAndUpdate(
       {
-        _id:                          data.candidateId,
-        'evaluationHistory.sessionId': new mongoose.Types.ObjectId(sessionId),
+        _id:                          candidateId,
+        'evaluationHistory.sessionId': parsedSessionId,
       },
       {
         $set: {
