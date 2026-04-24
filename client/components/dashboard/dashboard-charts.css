@@ -1,8 +1,9 @@
 .chart-card--chart {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 1rem;
   border: 1px solid var(--border-strong);
+  padding: 1.4rem;
 }
 
 .chart-toolbar {
@@ -10,7 +11,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .chart-range-toggle {
@@ -27,7 +28,7 @@
   color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 0.35rem 0.65rem;
+  padding: 0.5rem 0.8rem;
   cursor: pointer;
   font-family: var(--font-sans);
   transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
@@ -48,14 +49,25 @@
   box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
+.chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.chart-subtitle {
+  margin-top: 0.3rem;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
 .chart-recharts-wrap {
   width: 100%;
-  height: 228px;
-  margin-top: 0.35rem;
+  height: 252px;
+  margin-top: 0.2rem;
 }
 
 .chart-recharts-wrap--bar {
-  height: 220px;
+  height: 244px;
 }
 
 /* Recharts default tooltip wrapper — reset so our box sizes cleanly */

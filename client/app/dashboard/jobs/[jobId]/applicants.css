@@ -17,9 +17,9 @@
   justify-content: space-between;
   gap: 1.25rem;
   padding: 1.1rem 1.2rem;
-  border: 1px solid #d7dce5;
+  border: 1px solid var(--border-strong);
   border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  background: #f7f9fc;
 }
 
 .applicants-eyebrow,
@@ -55,9 +55,11 @@
 .applicants-summary-card {
   min-width: 110px;
   padding: 0.85rem 0.95rem;
-  border: 1px solid #d8dde7;
-  border-radius: 14px;
-  background: #fff;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding-right: 0;
+  text-align: right;
 }
 
 .applicants-summary-card__label {
@@ -77,7 +79,7 @@
   align-items: center;
   gap: 0.8rem;
   padding: 0.65rem;
-  border: 1px solid #d6dbe5;
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
   background: #fff;
 }
@@ -90,7 +92,7 @@
   gap: 0.55rem;
   min-height: 42px;
   padding: 0 0.9rem;
-  border: 1px solid #d0d5de;
+  border: 1px solid var(--border-soft);
   border-radius: 12px;
   background: #fdfdff;
 }
@@ -147,7 +149,7 @@
 }
 
 .applicants-action-btn--secondary {
-  border-color: #d7dceb;
+  border-color: var(--border-soft);
   background: #f7f8fc;
   color: #20242d;
 }
@@ -159,7 +161,7 @@
 }
 
 .applicants-action-btn--ghost {
-  border-color: #d7dceb;
+  border-color: var(--border-soft);
   background: #fff;
   color: #4b5563;
 }
@@ -170,7 +172,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 1rem;
-  border: 1px solid #d7dceb;
+  border: 1px solid var(--border-soft);
   border-radius: 14px;
   background: #f8faff;
   color: #232834;
@@ -184,7 +186,7 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid #d5dbe7;
+  border: 1px solid var(--border-soft);
   border-radius: 50%;
   background: #fff;
   color: #5f6775;
@@ -196,6 +198,79 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.applicants-progress {
+  padding: 0.95rem 1rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.applicants-progress__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.applicants-progress__eyebrow {
+  margin: 0 0 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7a8190;
+}
+
+.applicants-progress__title {
+  display: block;
+  color: #151922;
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.applicants-progress__value {
+  color: #5b6270;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.applicants-progress__track {
+  margin-top: 0.8rem;
+  height: 8px;
+  border-radius: 999px;
+  background: #edf1f6;
+  overflow: hidden;
+}
+
+.applicants-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #6b4eff;
+  transition: width 0.35s ease;
+}
+
+.applicants-progress__meta {
+  margin: 0.7rem 0 0;
+  font-size: 0.83rem;
+  color: #667080;
+}
+
+.applicants-progress__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.applicants-progress__success {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .applicants-table-meta {
@@ -210,7 +285,7 @@
 
 .applicants-table-container {
   min-height: 0;
-  border: 1px solid #d7dce5;
+  border: 1px solid var(--border-strong);
   border-radius: 18px;
   background: #fff;
   overflow: auto;
@@ -302,6 +377,7 @@
   gap: 0.4rem;
   min-height: 38px;
   padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border-soft);
   border-radius: 10px;
   background: #f5f7fb;
   color: #1f2430;
@@ -358,7 +434,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.2rem 1.2rem 1rem;
-  border-bottom: 1px solid #e7ebf2;
+  border-bottom: 1px solid var(--border-divider);
 }
 
 .sessions-drawer__title {
@@ -378,9 +454,9 @@
 
 .session-card {
   padding: 1rem;
-  border: 1px solid #d9deea;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+  border: none;
+  border-radius: 12px;
+  background: #f8fafc;
 }
 
 .session-card__top {
@@ -407,8 +483,8 @@
 
 .session-card__metric {
   padding: 0.75rem 0.8rem;
-  border-radius: 14px;
-  background: #f3f6fb;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .session-card__metric-label {
@@ -486,6 +562,11 @@
 
   .applicants-action-btn {
     width: 100%;
+  }
+
+  .applicants-progress__actions {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .sessions-drawer {

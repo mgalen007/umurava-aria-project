@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React, { FormEvent, useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
-import { LoginPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { ApiError } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
-import './login.css';
+import React, { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
+import { LoginPageSkeleton } from "@/components/skeletons/PageSkeletons";
+import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import "./login.css";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, user, isLoading } = useAuth();
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace('/dashboard');
+      router.replace("/dashboard");
     }
   }, [isLoading, router, user]);
 
@@ -31,9 +31,13 @@ export default function LoginPage() {
 
     try {
       await login(identifier, password);
-      router.replace('/dashboard');
+      router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to sign in right now.');
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "We couldn't sign you in right now. Please check your email and password, then try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -65,6 +69,7 @@ export default function LoginPage() {
                     if (error) setError(null);
                   }}
                   autoComplete="username"
+                  required
                 />
               </div>
 
@@ -83,6 +88,7 @@ export default function LoginPage() {
                     if (error) setError(null);
                   }}
                   autoComplete="current-password"
+                  required
                 />
               </div>
 
@@ -98,15 +104,22 @@ export default function LoginPage() {
                 </a>
               </div>
 
-              <button type="submit" className="login-button login-button-primary" disabled={isSubmitting}>
-                {isSubmitting ? 'Signing in...' : 'Login'}
+              <button
+                type="submit"
+                className="login-button login-button-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Signing in..." : "Login"}
               </button>
 
               <div className="login-divider">
                 <span>OR</span>
               </div>
 
-              <button type="button" className="login-button login-button-secondary">
+              <button
+                type="button"
+                className="login-button login-button-secondary"
+              >
                 <span>Login with Google</span>
                 <Image
                   src="/image/google-icon.png"
@@ -115,11 +128,11 @@ export default function LoginPage() {
                   height={20}
                   className="google-icon"
                   priority
-                                  />
+                />
               </button>
 
               <p className="login-switch">
-                Don&apos;t have an account?{' '}
+                Don&apos;t have an account?{" "}
                 <Link href="/register" className="login-link">
                   Register
                 </Link>
