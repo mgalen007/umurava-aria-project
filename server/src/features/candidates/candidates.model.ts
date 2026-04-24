@@ -112,7 +112,7 @@ const CandidateSchema = new Schema<ICandidate>(
     },
     firstName:  { type: String, required: true },
     lastName:   { type: String, required: true },
-    email:      { type: String, required: true, unique: true },
+    email:      { type: String, required: true, lowercase: true, trim: true },
     headline:   { type: String, required: true },
     bio:        { type: String },
     location:   { type: String, required: true },
@@ -138,5 +138,6 @@ const CandidateSchema = new Schema<ICandidate>(
 );
 
 CandidateSchema.index({ firstName: 'text', lastName: 'text', headline: 'text' });
+CandidateSchema.index({ uploadedBy: 1, email: 1 }, { unique: true });
 
 export const Candidate = mongoose.model<ICandidate>('Candidate', CandidateSchema);

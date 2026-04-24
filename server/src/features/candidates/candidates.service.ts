@@ -18,11 +18,18 @@ export class CandidatesService {
     uploadedBy: string,
     source: 'manual_entry' | 'pdf_resume' | 'csv_upload'
   ) {
-    const existing = await Candidate.findOne({ email: data.email });
-    if (existing) throw new AppError('A candidate with this email already exists', 409);
+    const normalizedData = this.normalizeCandidatePayload(data);
+    const existing = await Candidate.findOne({
+      uploadedBy,
+      email: normalizedData.email,
+    });
+
+    if (existing) {
+      return existing;
+    }
 
     const candidate = await Candidate.create({
-      ...data,
+      ...normalizedData,
       source,
       uploadedBy,
       extractionConfidence: 1,
@@ -45,9 +52,23 @@ export class CandidatesService {
   }
 
   async update(id: string, data: UpdateCandidateDto, uploadedBy: string) {
+    const normalizedData = this.normalizeCandidatePayload(data);
+
+    if (normalizedData.email) {
+      const existing = await Candidate.findOne({
+        _id: { $ne: id },
+        uploadedBy,
+        email: normalizedData.email,
+      });
+
+      if (existing) {
+        throw new AppError('A candidate with this email already exists in your workspace', 409);
+      }
+    }
+
     const candidate = await Candidate.findOneAndUpdate(
       { _id: id, uploadedBy },
-      data,
+      normalizedData,
       { returnDocument: 'after' }
     );
     if (!candidate) throw new AppError('Candidate not found', 404);
@@ -120,5 +141,18 @@ export class CandidatesService {
     } catch {
       // Ignore cleanup failures for already-removed temp files.
     }
+  }
+
+  private normalizeCandidatePayload<T extends CreateCandidateDto | IngestCandidateDto | UpdateCandidateDto>(
+    data: T
+  ): T {
+    if (!data.email) {
+      return data;
+    }
+
+    return {
+      ...data,
+      email: data.email.trim().toLowerCase(),
+    };
   }
 }
