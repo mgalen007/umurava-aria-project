@@ -14,9 +14,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.15rem 1.25rem;
-  border: 1px solid #a0a7b5;
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+  background: #f8faff;
 }
 
 .draft-eyebrow,
@@ -66,7 +66,7 @@
 
 .draft-side-card,
 .draft-main-card {
-  border: 1px solid #a0a7b5;
+  border: 1px solid var(--border-strong);
   border-radius: 16px;
   background: #fff;
 }
@@ -180,7 +180,7 @@
 
 .draft-inline-edit-btn,
 .draft-secondary-btn {
-  border: 1px solid #cdd3de;
+  border: 1px solid var(--border-soft);
   background: #fff;
   color: #1d2128;
 }
@@ -194,9 +194,9 @@
 .draft-description {
   min-height: 360px;
   padding: 1rem 1.05rem;
-  border: 1px solid #d4d8e1;
+  border: 1px solid var(--border-muted);
   border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #fcfcff 100%);
+  background: #fcfcff;
 }
 
 .draft-description p {
@@ -220,7 +220,7 @@
   width: 100%;
   min-height: 360px;
   padding: 1rem 1.05rem;
-  border: 1px solid #cdd3de;
+  border: 1px solid var(--border-soft);
   border-radius: 14px;
   resize: vertical;
   outline: none;

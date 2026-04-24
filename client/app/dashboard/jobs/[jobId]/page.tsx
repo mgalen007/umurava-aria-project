@@ -29,7 +29,7 @@ import {
   getCandidateName,
   getJobId,
 } from "@/lib/helpers";
-import type { Candidate, Job, Session } from "@/lib/types";
+import type { Candidate, Job, Session, SessionStatus } from "@/lib/types";
 import "./applicants.css";
 
 export default function JobApplicantsPage({
@@ -49,9 +49,53 @@ export default function JobApplicantsPage({
   const [bannerFailures, setBannerFailures] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [screeningProgress, setScreeningProgress] = useState(0);
+  const [screeningProgressLabel, setScreeningProgressLabel] = useState("");
+  const [screeningTargetCount, setScreeningTargetCount] = useState(0);
+  const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
+  const [screeningState, setScreeningState] = useState<
+    "idle" | "starting" | "running" | "success" | "failed"
+  >("idle");
+  const [screeningStatus, setScreeningStatus] = useState<SessionStatus | null>(
+    null,
+  );
   const [isUploading, setIsUploading] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const csvInputRef = useRef<HTMLInputElement | null>(null);
+  const screeningProgressTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
+  const screeningResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const isMountedRef = useRef(true);
+
+  function clearScreeningProgressTimer() {
+    if (screeningProgressTimerRef.current) {
+      clearInterval(screeningProgressTimerRef.current);
+      screeningProgressTimerRef.current = null;
+    }
+  }
+
+  function clearScreeningResetTimer() {
+    if (screeningResetTimerRef.current) {
+      clearTimeout(screeningResetTimerRef.current);
+      screeningResetTimerRef.current = null;
+    }
+  }
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+      clearScreeningProgressTimer();
+      clearScreeningResetTimer();
+    },
+    [],
+  );
+
+  useEffect(() => {
+    isMountedRef.current = true;
+  }, []);
 
   useEffect(() => {
     if (!token || !jobId) return;
@@ -171,6 +215,29 @@ export default function JobApplicantsPage({
     setSelectedIds(Array.from(merged));
   }
 
+  async function waitForScreeningCompletion(sessionId: string, authToken: string) {
+    let attempts = 0;
+
+    while (isMountedRef.current && attempts < 240) {
+      const nextSession = await api.getSession(sessionId, authToken);
+      if (!isMountedRef.current) return null;
+
+      setScreeningStatus(nextSession.status);
+
+      if (nextSession.status === "completed" || nextSession.status === "failed") {
+        return nextSession;
+      }
+
+      await new Promise<void>((resolve) => {
+        screeningResetTimerRef.current = window.setTimeout(() => resolve(), 2500);
+      });
+      clearScreeningResetTimer();
+      attempts += 1;
+    }
+
+    return null;
+  }
+
   async function handleScreenSelected() {
     if (validSelectedCount === 0 || !token) return;
 
@@ -183,8 +250,39 @@ export default function JobApplicantsPage({
     }
 
     setIsRunning(true);
+    setScreeningState("starting");
+    setCompletedSessionId(null);
+    setScreeningStatus("pending");
+    setScreeningTargetCount(validSelectedIds.length);
+    setScreeningProgress(8);
+    setScreeningProgressLabel("Preparing candidates for screening");
     setError(null);
+    setBannerMessage(null);
     setBannerFailures([]);
+    clearScreeningProgressTimer();
+    clearScreeningResetTimer();
+    screeningProgressTimerRef.current = setInterval(() => {
+      setScreeningProgress((current) => {
+        if (current >= 94) {
+          return current;
+        }
+
+        if (current < 24) {
+          setScreeningProgressLabel("Creating screening session");
+          return current + 8;
+        }
+
+        if (current < 52) {
+          setScreeningProgressLabel("Submitting selected candidates");
+          return current + 6;
+        }
+
+        setScreeningState("running");
+        setScreeningProgressLabel("Screening candidates");
+        return current + (current < 78 ? 3 : 1);
+      });
+    }, 700);
+
     try {
       const session = await api.createSession(
         {
@@ -196,18 +294,47 @@ export default function JobApplicantsPage({
         token,
       );
       await api.runSession(session._id, token);
+      setScreeningState("running");
+      setScreeningStatus("processing");
+      setScreeningProgressLabel("Screening candidates");
+      const completedSession = await waitForScreeningCompletion(session._id, token);
       const nextSessions = await api.getSessions(token);
-      setSessions(
-        nextSessions.filter((item) => getJobId(item) === jobId),
-      );
-      setBannerMessage(
-        `Screening started for ${validSelectedIds.length} candidate${validSelectedIds.length > 1 ? "s" : ""}.`,
-      );
+      setSessions(nextSessions.filter((item) => getJobId(item) === jobId));
+      clearScreeningProgressTimer();
+
+      if (completedSession?.status === "completed") {
+        setScreeningProgress(100);
+        setScreeningStatus("completed");
+        setScreeningState("success");
+        setCompletedSessionId(completedSession._id);
+        setScreeningProgressLabel("Screening complete");
+      } else if (completedSession?.status === "failed") {
+        setScreeningProgress(100);
+        setScreeningStatus("failed");
+        setScreeningState("failed");
+        setScreeningProgressLabel("Screening failed");
+        setBannerMessage(completedSession.error ?? "Screening failed.");
+      } else {
+        setScreeningState("failed");
+        setScreeningStatus(null);
+        setScreeningProgressLabel("Screening status unavailable");
+        setBannerMessage(
+          "Screening is still running, but live completion tracking was unavailable.",
+        );
+      }
     } catch (err) {
+      clearScreeningProgressTimer();
+      setScreeningProgress(0);
+      setScreeningProgressLabel("");
+      setScreeningTargetCount(0);
+      setScreeningStatus(null);
+      setScreeningState("idle");
       setBannerMessage(
         err instanceof ApiError ? err.message : "Unable to start screening.",
       );
     } finally {
+      clearScreeningProgressTimer();
+      clearScreeningResetTimer();
       setIsRunning(false);
     }
   }
@@ -438,6 +565,73 @@ export default function JobApplicantsPage({
 
           {!error ? (
           <div className="applicants-table-shell">
+            {screeningState !== "idle" ? (
+              <div className="applicants-progress" role="status" aria-live="polite">
+                <div className="applicants-progress__header">
+                  <div>
+                    <p className="applicants-progress__eyebrow">
+                      {screeningState === "success"
+                        ? "Screening complete"
+                        : screeningState === "failed"
+                          ? "Screening update"
+                          : "Screening in progress"}
+                    </p>
+                    <strong className="applicants-progress__title">
+                      {screeningProgressLabel ||
+                        "Starting candidate screening"}
+                    </strong>
+                  </div>
+                  <span className="applicants-progress__value">
+                    {Math.round(screeningProgress)}%
+                  </span>
+                </div>
+                <div
+                  className="applicants-progress__track"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="applicants-progress__fill"
+                    style={{ width: `${Math.max(screeningProgress, 6)}%` }}
+                  />
+                </div>
+                <p className="applicants-progress__meta">
+                  {screeningState === "success" && completedSessionId ? (
+                    <>
+                      Results are ready for {screeningTargetCount} candidate
+                      {screeningTargetCount === 1 ? "" : "s"}.
+                    </>
+                  ) : screeningState === "failed" ? (
+                    <>
+                      {screeningStatus === "failed"
+                        ? "The screening run ended with an error."
+                        : "We could not confirm the final screening state yet."}
+                    </>
+                  ) : (
+                    <>
+                      Screening {screeningTargetCount} selected candidate
+                      {screeningTargetCount === 1 ? "" : "s"} for this role.
+                      {screeningStatus
+                        ? ` Status: ${formatSessionStatus(screeningStatus)}.`
+                        : ""}
+                    </>
+                  )}
+                </p>
+                {screeningState === "success" && completedSessionId ? (
+                  <div className="applicants-progress__actions">
+                    <span className="applicants-progress__success">
+                      Screening finished successfully.
+                    </span>
+                    <Link
+                      href={`/dashboard/jobs/${jobId}/session/${completedSessionId}`}
+                      className="applicants-action-btn applicants-action-btn--ghost"
+                    >
+                      View results
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="applicants-table-meta">
               <span>
                 Showing {filteredApplicants.length} of {allCandidates.length}{" "}
@@ -507,7 +701,7 @@ export default function JobApplicantsPage({
                             className="cv-view-btn"
                           >
                             <Eye size={16} />
-                            View CV
+                            View
                           </a>
                         </td>
                       </tr>

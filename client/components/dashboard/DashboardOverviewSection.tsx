@@ -1,40 +1,49 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import './dashboard-overview.css';
+import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import "./dashboard-overview.css";
 
 export type DashboardJobRow = {
   id: string;
   role: string;
   dept: string;
-  status: 'Active' | 'Draft' | 'Closed';
+  status: "Active" | "Draft" | "Closed";
   matchScoreAvg: number | null;
   highMatchedCandidate: string | null;
   candidatesCount: number;
   lastScreened: string;
 };
 
-export type StatusFilter = 'all' | 'active' | 'draft';
+export type StatusFilter = "all" | "active" | "draft";
 
-function matchesStatusFilter(status: DashboardJobRow['status'], filter: StatusFilter): boolean {
-  if (filter === 'all') return true;
-  if (filter === 'active') return status === 'Active';
-  if (filter === 'draft') return status === 'Draft';
+function matchesStatusFilter(
+  status: DashboardJobRow["status"],
+  filter: StatusFilter,
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "active") return status === "Active";
+  if (filter === "draft") return status === "Draft";
   return true;
 }
 
-function matchScoreVariant(score: number | null): 'high' | 'mid' | 'low' | 'empty' {
-  if (score == null) return 'empty';
-  if (score >= 75) return 'high';
-  if (score >= 50) return 'mid';
-  return 'low';
+function matchScoreVariant(
+  score: number | null,
+): "high" | "mid" | "low" | "empty" {
+  if (score == null) return "empty";
+  if (score >= 75) return "high";
+  if (score >= 50) return "mid";
+  return "low";
 }
 
-export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [jobQuery, setJobQuery] = useState('');
+export function DashboardOverviewSection({
+  rows,
+}: {
+  rows: DashboardJobRow[];
+}) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [jobQuery, setJobQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
@@ -48,7 +57,10 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
   }, [rows, statusFilter, jobQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginatedJobs = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedJobs = filtered.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -66,12 +78,16 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
     setCurrentPage((page) => Math.min(totalPages, page + 1));
   };
 
-  const pageStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const pageEnd = filtered.length === 0 ? 0 : Math.min(currentPage * pageSize, filtered.length);
-  const visiblePages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(
-    Math.max(0, currentPage - 2),
-    Math.max(0, currentPage - 2) + 3
-  );
+  const pageStart =
+    filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const pageEnd =
+    filtered.length === 0
+      ? 0
+      : Math.min(currentPage * pageSize, filtered.length);
+  const visiblePages = Array.from(
+    { length: totalPages },
+    (_, index) => index + 1,
+  ).slice(Math.max(0, currentPage - 2), Math.max(0, currentPage - 2) + 3);
 
   return (
     <section className="overview-panel">
@@ -91,12 +107,16 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
             />
           </label>
 
-          <div className="overview-filter-group" role="tablist" aria-label="Filter jobs by status">
+          <div
+            className="overview-filter-group"
+            role="tablist"
+            aria-label="Filter jobs by status"
+          >
             {(
               [
-                { id: 'all' as const, label: 'All' },
-                { id: 'active' as const, label: 'Active' },
-                { id: 'draft' as const, label: 'Draft' },
+                { id: "all" as const, label: "All" },
+                { id: "active" as const, label: "Active" },
+                { id: "draft" as const, label: "Draft" },
               ] as const
             ).map(({ id, label }) => (
               <button
@@ -104,7 +124,7 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
                 type="button"
                 role="tab"
                 aria-selected={statusFilter === id}
-                className={`overview-filter-btn ${statusFilter === id ? 'is-active' : ''}`}
+                className={`overview-filter-btn ${statusFilter === id ? "is-active" : ""}`}
                 onClick={() => setStatusFilter(id)}
               >
                 {label}
@@ -119,7 +139,9 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
           <span>Job role</span>
           <span>Status</span>
           <span>Candidates</span>
-          <span>Match Score</span>
+          <span title="AI-calculated match score based on CV keywords and job requirements">
+            Match Score
+          </span>
           <span>Last screened</span>
           <span>Action</span>
         </div>
@@ -130,32 +152,51 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
             return (
               <article className="overview-row" key={job.id}>
                 <div className="overview-row__job">
-                  <Link href={`/dashboard/jobs/${job.id}`} className="overview-job-link">
+                  <Link
+                    href={`/dashboard/jobs/${job.id}`}
+                    className="overview-job-link"
+                  >
                     {job.role}
                   </Link>
                 </div>
                 <div className="overview-row__status">
-                  <span className={`status-pill status-pill--${job.status.toLowerCase()}`}>{job.status}</span>
+                  <span
+                    className={`status-pill status-pill--${job.status.toLowerCase()}`}
+                  >
+                    {job.status}
+                  </span>
                 </div>
-                <div className="overview-row__candidates">{job.candidatesCount}</div>
+                <div className="overview-row__candidates">
+                  {job.candidatesCount}
+                </div>
                 <div className="overview-row__score">
                   <div className="match-score-cell">
-                    <div className="match-score-track" aria-hidden={job.matchScoreAvg == null}>
+                    <div
+                      className="match-score-track"
+                      aria-hidden={job.matchScoreAvg == null}
+                    >
                       {job.matchScoreAvg != null ? (
                         <div
                           className={`match-score-fill match-score-fill--${variant}`}
-                          style={{ width: `${Math.min(100, job.matchScoreAvg)}%` }}
+                          style={{
+                            width: `${Math.min(100, job.matchScoreAvg)}%`,
+                          }}
                         />
                       ) : null}
                     </div>
                     <span className="match-score-value">
-                      {job.matchScoreAvg != null ? `${job.matchScoreAvg}%` : '—'}
+                      {job.matchScoreAvg != null
+                        ? `${job.matchScoreAvg}%`
+                        : "—"}
                     </span>
                   </div>
                 </div>
                 <div className="overview-row__date">{job.lastScreened}</div>
                 <div className="overview-row__action">
-                  <Link href={`/dashboard/jobs/${job.id}`} className="overview-action-btn">
+                  <Link
+                    href={`/dashboard/jobs/${job.id}`}
+                    className="overview-action-btn"
+                  >
                     View
                   </Link>
                 </div>
@@ -163,7 +204,9 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
             );
           })}
 
-          {paginatedJobs.length === 0 ? <div className="overview-empty">No jobs match your filters.</div> : null}
+          {paginatedJobs.length === 0 ? (
+            <div className="overview-empty">No jobs match your filters.</div>
+          ) : null}
         </div>
 
         <div className="overview-footer">
@@ -187,7 +230,7 @@ export function DashboardOverviewSection({ rows }: { rows: DashboardJobRow[] }) 
                 <button
                   type="button"
                   key={pageNumber}
-                  className={`overview-pagination__page ${pageNumber === currentPage ? 'is-active' : ''}`}
+                  className={`overview-pagination__page ${pageNumber === currentPage ? "is-active" : ""}`}
                   onClick={() => setCurrentPage(pageNumber)}
                 >
                   {pageNumber}
