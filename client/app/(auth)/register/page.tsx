@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import React, { FormEvent, useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
-import { LoginPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { ApiError } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
-import './register.css';
+import React, { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
+import { LoginPageSkeleton } from "@/components/skeletons/PageSkeletons";
+import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import "./register.css";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register, user, isLoading } = useAuth();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace('/dashboard');
+      router.replace("/dashboard");
     }
   }, [isLoading, router, user]);
 
@@ -40,9 +40,13 @@ export default function RegisterPage() {
         email,
         password,
       });
-      router.replace('/dashboard');
+      router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to create your account right now.');
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "We couldn't create your account right now. Please check your details and try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +59,9 @@ export default function RegisterPage() {
           <div className="register-card-content">
             <div className="register-header">
               <h1 className="register-title">Create your account</h1>
-              <p className="register-subtitle">Set up your ARIA workspace in a few quick steps</p>
+              <p className="register-subtitle">
+                Set up your ARIA workspace in a few quick steps
+              </p>
             </div>
 
             <form className="register-form" onSubmit={handleSubmit}>
@@ -69,13 +75,13 @@ export default function RegisterPage() {
                     type="text"
                     className="register-input"
                     placeholder="Enter your first name"
-                  value={firstName}
-                  onChange={(event) => {
-                    setFirstName(event.target.value);
-                    if (error) setError(null);
-                  }}
-                  autoComplete="given-name"
-                />
+                    value={firstName}
+                    onChange={(event) => {
+                      setFirstName(event.target.value);
+                      if (error) setError(null);
+                    }}
+                    autoComplete="given-name"
+                  />
                 </div>
 
                 <div className="input-group register-input-group">
@@ -87,13 +93,13 @@ export default function RegisterPage() {
                     type="text"
                     className="register-input"
                     placeholder="Enter your last name"
-                  value={lastName}
-                  onChange={(event) => {
-                    setLastName(event.target.value);
-                    if (error) setError(null);
-                  }}
-                  autoComplete="family-name"
-                />
+                    value={lastName}
+                    onChange={(event) => {
+                      setLastName(event.target.value);
+                      if (error) setError(null);
+                    }}
+                    autoComplete="family-name"
+                  />
                 </div>
               </div>
 
@@ -157,15 +163,22 @@ export default function RegisterPage() {
                 </div>
               ) : null}
 
-              <button type="submit" className="register-button register-button-primary" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating account...' : 'Create account'}
+              <button
+                type="submit"
+                className="register-button register-button-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Creating account..." : "Create account"}
               </button>
 
               <div className="register-divider">
                 <span>OR</span>
               </div>
 
-              <button type="button" className="register-button register-button-secondary">
+              <button
+                type="button"
+                className="register-button register-button-secondary"
+              >
                 <span>Sign up with Google</span>
                 <Image
                   src="/image/google-icon.png"
@@ -177,7 +190,7 @@ export default function RegisterPage() {
               </button>
 
               <p className="register-switch">
-                Already have an account?{' '}
+                Already have an account?{" "}
                 <Link href="/login" className="register-link">
                   Log in
                 </Link>

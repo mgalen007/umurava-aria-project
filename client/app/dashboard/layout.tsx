@@ -163,7 +163,7 @@ export default function DashboardLayout({
             </Link>
             <button
               type="button"
-              className="nav-item"
+              className="nav-item nav-item--logout"
               onClick={() => {
                 logout();
                 router.replace('/login');

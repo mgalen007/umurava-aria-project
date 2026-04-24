@@ -1,30 +1,42 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Eye, Search, X } from 'lucide-react';
-import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
-import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
-import { CandidatesPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { ApiError, api } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
-import { buildCandidateCvUrl, getCandidateName, getCandidateYearsExperience } from '@/lib/helpers';
-import type { Candidate } from '@/lib/types';
-import './candidates.css';
+import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Eye, Search, X } from "lucide-react";
+import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
+import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
+import { CandidatesPageSkeleton } from "@/components/skeletons/PageSkeletons";
+import { ApiError, api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import {
+  buildCandidateCvUrl,
+  getCandidateName,
+  getCandidateYearsExperience,
+} from "@/lib/helpers";
+import type { Candidate } from "@/lib/types";
+import "./candidates.css";
 
 export default function CandidatesPage() {
-  const { token } = useAuth();
+  const { token, isLoading: isAuthLoading } = useAuth();
   const [selected, setSelected] = useState<Candidate | null>(null);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    if (isAuthLoading) return;
+    if (!token) {
+      setIsPageLoading(false);
+      return;
+    }
+
     let isActive = true;
+    setIsPageLoading(true);
     setError(null);
 
-    api.getCandidates(token)
+    api
+      .getCandidates(token)
       .then((result) => {
         if (!isActive) return;
         setCandidates(result);
@@ -32,13 +44,21 @@ export default function CandidatesPage() {
       })
       .catch((err) => {
         if (!isActive) return;
-        setError(err instanceof ApiError ? err.message : 'Unable to load candidates.');
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "We couldn't load your candidates right now. Please check your connection and try again.",
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsPageLoading(false);
       });
 
     return () => {
       isActive = false;
     };
-  }, [token]);
+  }, [isAuthLoading, token]);
 
   const filteredCandidates = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -50,10 +70,9 @@ export default function CandidatesPage() {
         candidate.email,
         candidate.location,
         candidate.headline,
-        candidate.globalStatus,
         candidate.source,
         ...candidate.skills.map((skill) => skill.name),
-      ].some((value) => value.toLowerCase().includes(normalizedQuery))
+      ].some((value) => value.toLowerCase().includes(normalizedQuery)),
     );
   }, [candidates, query]);
 
@@ -62,16 +81,17 @@ export default function CandidatesPage() {
   useEffect(() => {
     if (!selected) return undefined;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeDrawer();
+      if (event.key === "Escape") closeDrawer();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
   useEffect(() => {
     if (!selected) return;
 
-    const nextSelected = candidates.find((candidate) => candidate._id === selected._id) ?? null;
+    const nextSelected =
+      candidates.find((candidate) => candidate._id === selected._id) ?? null;
     if (!nextSelected) {
       setSelected(null);
       return;
@@ -83,29 +103,40 @@ export default function CandidatesPage() {
   }, [candidates, selected]);
 
   return (
-    <PageSkeletonGate skeleton={<CandidatesPageSkeleton />}>
+    <PageSkeletonGate
+      skeleton={<CandidatesPageSkeleton />}
+      isLoading={isAuthLoading || isPageLoading}
+    >
       <div className="page-container candidates-page">
-        <DashboardTopBar breadcrumbs={['Candidates']} />
+        <DashboardTopBar breadcrumbs={["Candidates"]} />
 
         <section className="candidates-shell">
           <div className="candidates-header">
-            <div>
-              <p className="candidates-eyebrow">Candidate directory</p>
-              <h1 className="candidates-heading">Candidates across your workspace</h1>
+            <div className="candidates-header__intro">
+              <h1 className="candidates-heading">Candidates</h1>
               <p className="candidates-subtitle">
-                Browse talent already in your workspace and review profiles that can be attached to different job pipelines.
+                Browse talent already in your workspace and review profiles that
+                can be attached to different job pipelines.
               </p>
             </div>
 
             <div className="candidates-summary-card">
-              <span className="candidates-summary-card__label">Total candidates</span>
-              <strong className="candidates-summary-card__value">{candidates.length}</strong>
+              <span className="candidates-summary-card__label">
+                Total candidates
+              </span>
+              <strong className="candidates-summary-card__value">
+                {candidates.length}
+              </strong>
             </div>
           </div>
 
           <div className="candidates-toolbar">
             <label className="candidates-search">
-              <Search size={18} className="candidates-search__icon" aria-hidden />
+              <Search
+                size={18}
+                className="candidates-search__icon"
+                aria-hidden
+              />
               <input
                 type="search"
                 className="candidates-search__input"
@@ -128,10 +159,6 @@ export default function CandidatesPage() {
           {error ? <div className="candidates-empty">{error}</div> : null}
 
           <div className="candidates-table-shell">
-            <div className="candidates-table-meta">
-              <span>Use this view to compare talent across all active and draft roles. Import new candidates from an individual job page.</span>
-            </div>
-
             <div className="candidates-table-container">
               <table className="candidates-table">
                 <thead>
@@ -146,69 +173,88 @@ export default function CandidatesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {!error ? filteredCandidates.map((candidate) => (
-                    <tr key={candidate._id}>
-                      <td>
-                        <div className="candidate-cell">
-                          <div>
-                            <div className="candidate-name">{getCandidateName(candidate)}</div>
-                            <div className="candidate-subline">{candidate.headline}</div>
-                            <a href={`mailto:${candidate.email}`} className="candidate-link">
-                              {candidate.email}
-                            </a>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{candidate.location}</td>
-                      <td>
-                        <span className={`candidate-stage candidate-stage--${candidate.globalStatus.toLowerCase()}`}>
-                          {candidate.globalStatus}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="candidate-score-pill">{getCandidateYearsExperience(candidate.experience)} yrs</span>
-                      </td>
-                      <td>{candidate.source}</td>
-                      <td>
-                        <div className="candidate-job-badges">
-                          {candidate.skills.slice(0, 3).map((skill) => (
-                            <span key={`${candidate._id}-${skill.name}`} className="candidate-job-badge">
-                              {skill.name}
+                  {!error
+                    ? filteredCandidates.map((candidate) => (
+                        <tr key={candidate._id}>
+                          <td>
+                            <div className="candidate-cell">
+                              <div>
+                                <div className="candidate-name">
+                                  {getCandidateName(candidate)}
+                                </div>
+                                <div className="candidate-subline">
+                                  {candidate.headline}
+                                </div>
+                                <a
+                                  href={`mailto:${candidate.email}`}
+                                  className="candidate-link"
+                                >
+                                  {candidate.email}
+                                </a>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{candidate.location}</td>
+                          <td>
+                            <span
+                              className={`candidate-stage candidate-stage--${candidate.globalStatus.toLowerCase()}`}
+                            >
+                              {candidate.globalStatus}
                             </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="candidates-table__action-col">
-                        <div className="candidate-actions">
-                          <a
-                            href={buildCandidateCvUrl(candidate)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="candidate-secondary-btn"
-                          >
-                            <Eye size={15} />
-                            CV
-                          </a>
-                          <button
-                            type="button"
-                            className="candidate-primary-btn"
-                            onClick={() => setSelected(candidate)}
-                            aria-expanded={selected?._id === candidate._id}
-                          >
-                            Full details
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )) : null}
+                          </td>
+                          <td>
+                            <span className="candidate-score-pill">
+                              {getCandidateYearsExperience(
+                                candidate.experience,
+                              )}{" "}
+                              yrs
+                            </span>
+                          </td>
+                          <td>{candidate.source}</td>
+                          <td>
+                            <div className="candidate-job-badges">
+                              {candidate.skills.slice(0, 3).map((skill) => (
+                                <span
+                                  key={`${candidate._id}-${skill.name}`}
+                                  className="candidate-job-badge"
+                                >
+                                  {skill.name}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="candidates-table__action-col">
+                            <div className="candidate-actions">
+                              <a
+                                href={buildCandidateCvUrl(candidate)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="candidate-secondary-btn"
+                              >
+                                <Eye size={15} />
+                                CV
+                              </a>
+                              <button
+                                type="button"
+                                className="candidate-primary-btn"
+                                onClick={() => setSelected(candidate)}
+                                aria-expanded={selected?._id === candidate._id}
+                              >
+                                Full details
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    : null}
 
                   {!error && filteredCandidates.length === 0 ? (
                     <tr>
                       <td colSpan={7}>
                         <div className="candidates-empty">
                           {candidates.length === 0
-                            ? 'No candidates have been added to your workspace yet.'
-                            : 'No candidates match your current search.'}
+                            ? "No candidates have been added to your workspace yet."
+                            : "No candidates match your current search."}
                         </div>
                       </td>
                     </tr>
@@ -220,15 +266,15 @@ export default function CandidatesPage() {
         </section>
 
         <div
-          className={`drawer-backdrop ${selected ? 'open' : ''}`}
+          className={`drawer-backdrop ${selected ? "open" : ""}`}
           onClick={closeDrawer}
-          onKeyDown={(event) => event.key === 'Escape' && closeDrawer()}
+          onKeyDown={(event) => event.key === "Escape" && closeDrawer()}
           role="presentation"
           aria-hidden={!selected}
         />
 
         <aside
-          className={`candidate-drawer ${selected ? 'open' : ''}`}
+          className={`candidate-drawer ${selected ? "open" : ""}`}
           aria-hidden={!selected}
           aria-label="Candidate profile"
         >
@@ -242,17 +288,23 @@ export default function CandidatesPage() {
                     {selected.headline} • {selected.location}
                   </p>
                 </div>
-                <button type="button" className="drawer-close" onClick={closeDrawer} aria-label="Close profile">
+                <button
+                  type="button"
+                  className="drawer-close"
+                  onClick={closeDrawer}
+                  aria-label="Close profile"
+                >
                   <X size={18} />
                 </button>
               </div>
 
               <div className="drawer-body">
                 <div className="drawer-overview">
-                  <div className="drawer-score">{getCandidateYearsExperience(selected.experience)} yrs</div>
+                  <div className="drawer-score">
+                    {getCandidateYearsExperience(selected.experience)} yrs
+                  </div>
                   <div className="drawer-overview__meta">
                     <span>{selected.source}</span>
-                    <span>{selected.globalStatus}</span>
                     <span>{selected.availability.status}</span>
                   </div>
                 </div>
@@ -260,7 +312,10 @@ export default function CandidatesPage() {
                 <div className="drawer-section">
                   <h3 className="drawer-section__title">Contact</h3>
                   <div className="drawer-contact-list">
-                    <a href={`mailto:${selected.email}`} className="candidate-link">
+                    <a
+                      href={`mailto:${selected.email}`}
+                      className="candidate-link"
+                    >
                       {selected.email}
                     </a>
                     <span>{selected.location}</span>
@@ -269,7 +324,10 @@ export default function CandidatesPage() {
 
                 <div className="drawer-section">
                   <h3 className="drawer-section__title">Summary</h3>
-                  <p className="drawer-summary">{selected.bio ?? 'No summary available for this candidate yet.'}</p>
+                  <p className="drawer-summary">
+                    {selected.bio ??
+                      "No summary available for this candidate yet."}
+                  </p>
                 </div>
 
                 <div className="drawer-section">

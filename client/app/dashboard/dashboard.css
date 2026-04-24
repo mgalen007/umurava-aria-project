@@ -15,7 +15,9 @@
   border-right: 1px solid var(--surface-dark);
   /* Same horizontal inset as collapsed so nav links line up in both states */
   padding: 1.5rem 1rem;
-  transition: width 0.3s ease, transform 0.3s ease;
+  transition:
+    width 0.3s ease,
+    transform 0.3s ease;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -46,7 +48,7 @@
 }
 
 .main-content {
-  --main-content-padding: 2rem;
+  --main-content-padding: 2.5rem;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -60,7 +62,10 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
-  transition: padding 0.3s ease, margin 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    padding 0.3s ease,
+    margin 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .mobile-overlay {
@@ -130,9 +135,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1.5rem;
   }
 
   .main-content {
+    --main-content-padding: 1.25rem;
     margin: 0.75rem;
   }
 }
@@ -146,7 +153,9 @@
   background-color: rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-md);
   margin-bottom: 2rem;
-  transition: background-color 0.2s ease, padding 0.3s ease;
+  transition:
+    background-color 0.2s ease,
+    padding 0.3s ease;
 }
 
 .org-profile-toggle {
@@ -186,7 +195,11 @@
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  transition: max-width 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
+  transition:
+    max-width 0.3s ease,
+    opacity 0.25s ease,
+    margin 0.3s ease,
+    padding 0.3s ease;
 }
 
 .admin-info {
@@ -194,7 +207,7 @@
   opacity: 1;
 }
 
-.admin-profile> :first-child {
+.admin-profile > :first-child {
   flex: 0 0 32px;
   width: 32px;
   min-width: 32px;
@@ -225,8 +238,13 @@
   margin-left: 0;
   font-size: 0.875rem;
   color: var(--text-tertiary);
+  border: 1px solid transparent;
   border-radius: var(--radius-button);
-  transition: background-color 0.2s, padding 0.3s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    padding 0.3s;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -248,7 +266,11 @@
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
-  transition: max-width 0.3s ease, opacity 0.25s ease, margin 0.25s ease, padding 0.25s ease;
+  transition:
+    max-width 0.3s ease,
+    opacity 0.25s ease,
+    margin 0.25s ease,
+    padding 0.25s ease;
   max-width: 15rem;
   opacity: 1;
 }
@@ -257,10 +279,37 @@
   background-color: rgba(255, 255, 255, 0.05);
 }
 
+.nav-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.28);
+  outline-offset: 2px;
+}
+
 .nav-item.active {
   background-color: var(--accent-color);
   color: var(--accent-text);
   font-weight: 500;
+}
+
+.nav-item--logout {
+  margin-top: 0.35rem;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.04);
+  color: #c8ced9;
+}
+
+.nav-item--logout:hover {
+  background-color: rgba(255, 255, 255, 0.075);
+  border: .5px solid #b0063c;
+  color: #b0063c;
+}
+
+.nav-item--logout:focus-visible {
+  outline-color: rgba(255, 255, 255, 0.22);
+}
+
+.sidebar.collapsed .nav-item--logout {
+  background-color: transparent;
+  border-color: transparent;
 }
 
 .sidebar-footer-nav {
@@ -271,7 +320,7 @@
 .page-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.25rem;
   height: 100%;
   min-height: 0;
 }

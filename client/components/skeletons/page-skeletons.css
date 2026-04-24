@@ -13,7 +13,7 @@
   display: block;
   overflow: hidden;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(223, 227, 235, 0.9), rgba(236, 239, 244, 0.95));
+  background: rgba(230, 234, 241, 0.95);
 }
 
 .skeleton-block::after {
@@ -170,9 +170,9 @@
 
 .skeleton-table-row {
   padding: 0.85rem 0.9rem;
-  border: 1px solid #d9dee7;
+  border: 1px solid var(--border-muted);
   border-radius: 10px;
-  background: linear-gradient(180deg, #fbfcff 0%, #f3f6fb 100%);
+  background: #f5f7fb;
 }
 
 .skeleton-metrics-grid {

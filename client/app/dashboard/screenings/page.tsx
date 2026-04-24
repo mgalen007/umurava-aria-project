@@ -1,34 +1,47 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { DashboardTopBar } from '@/components/dashboard/DashboardTopBar';
-import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
-import { ScreeningsPageSkeleton } from '@/components/skeletons/PageSkeletons';
-import { ApiError, api } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
-import { formatRelativeDate, formatSessionStatus, getJobId, getJobTitle } from '@/lib/helpers';
-import type { Session } from '@/lib/types';
-import './screenings.css';
+import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { ChevronDown, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
+import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
+import { ScreeningsPageSkeleton } from "@/components/skeletons/PageSkeletons";
+import { ApiError, api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import {
+  formatRelativeDate,
+  formatSessionStatus,
+  getJobId,
+  getJobTitle,
+} from "@/lib/helpers";
+import type { Session } from "@/lib/types";
+import "./screenings.css";
 
 const PAGE_SIZE = 5;
 
 export default function ScreeningsPage() {
-  const { token } = useAuth();
+  const { token, isLoading: isAuthLoading } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [query, setQuery] = useState('');
-  const [jobFilter, setJobFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [query, setQuery] = useState("");
+  const [jobFilter, setJobFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    if (isAuthLoading) return;
+    if (!token) {
+      setIsPageLoading(false);
+      return;
+    }
+
     let isActive = true;
+    setIsPageLoading(true);
     setError(null);
 
-    api.getSessions(token)
+    api
+      .getSessions(token)
       .then((result) => {
         if (!isActive) return;
         setSessions(result);
@@ -36,26 +49,42 @@ export default function ScreeningsPage() {
       })
       .catch((err) => {
         if (!isActive) return;
-        setError(err instanceof ApiError ? err.message : 'Unable to load screening sessions.');
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "We couldn't load your screening sessions right now. Please check your connection and try again.",
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsPageLoading(false);
       });
 
     return () => {
       isActive = false;
     };
-  }, [token]);
+  }, [isAuthLoading, token]);
 
   const jobOptions = useMemo(() => {
     const entries = new Map<string, string>();
-    sessions.forEach((session) => entries.set(getJobId(session), getJobTitle(session)));
-    return [{ label: 'Job', value: 'all' }, ...Array.from(entries.entries()).map(([value, label]) => ({ label, value }))];
+    sessions.forEach((session) =>
+      entries.set(getJobId(session), getJobTitle(session)),
+    );
+    return [
+      { label: "Job", value: "all" },
+      ...Array.from(entries.entries()).map(([value, label]) => ({
+        label,
+        value,
+      })),
+    ];
   }, [sessions]);
 
   const statusOptions = [
-    { label: 'All status', value: 'all' },
-    { label: 'Pending', value: 'pending' },
-    { label: 'Running', value: 'processing' },
-    { label: 'Completed', value: 'completed' },
-    { label: 'Failed', value: 'failed' },
+    { label: "All status", value: "all" },
+    { label: "Pending", value: "pending" },
+    { label: "Running", value: "processing" },
+    { label: "Completed", value: "completed" },
+    { label: "Failed", value: "failed" },
   ];
 
   const filteredRows = useMemo(() => {
@@ -66,53 +95,80 @@ export default function ScreeningsPage() {
         normalizedQuery.length === 0 ||
         jobTitle.toLowerCase().includes(normalizedQuery) ||
         session.name.toLowerCase().includes(normalizedQuery);
-      const matchesJob = jobFilter === 'all' || getJobId(session) === jobFilter;
-      const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
+      const matchesJob = jobFilter === "all" || getJobId(session) === jobFilter;
+      const matchesStatus =
+        statusFilter === "all" || session.status === statusFilter;
       return matchesQuery && matchesJob && matchesStatus;
     });
   }, [jobFilter, query, sessions, statusFilter]);
 
   const metrics = useMemo(() => {
-    const candidatesScreened = sessions.reduce((total, session) => total + session.candidateIds.length, 0);
-    const completed = sessions.filter((session) => session.status === 'completed');
+    const candidatesScreened = sessions.reduce(
+      (total, session) => total + session.candidateIds.length,
+      0,
+    );
+    const completed = sessions.filter(
+      (session) => session.status === "completed",
+    );
     const avgTopScore = completed.length
       ? Math.round(
-          completed.reduce((total, session) => total + (session.rankedResults[0]?.finalScore ?? 0), 0) / completed.length
+          completed.reduce(
+            (total, session) =>
+              total + (session.rankedResults[0]?.finalScore ?? 0),
+            0,
+          ) / completed.length,
         )
       : 0;
     const overrides = completed.reduce(
-      (total, session) => total + session.rankedResults.filter((result) => result.feedbackStatus === 'overridden').length,
-      0
+      (total, session) =>
+        total +
+        session.rankedResults.filter(
+          (result) => result.feedbackStatus === "overridden",
+        ).length,
+      0,
     );
 
     return [
-      { label: 'Total sessions run', value: String(sessions.length) },
-      { label: 'Candidates screened', value: String(candidatesScreened) },
-      { label: 'Avg top score', value: `${avgTopScore}%` },
-      { label: 'Sessions with overrides', value: String(overrides) },
+      { label: "Total sessions run", value: String(sessions.length) },
+      { label: "Candidates screened", value: String(candidatesScreened) },
+      { label: "Avg top score", value: `${avgTopScore}%` },
+      { label: "Sessions with overrides", value: String(overrides) },
     ];
   }, [sessions]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const paginatedRows = filteredRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const pageStart = filteredRows.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const pageEnd = filteredRows.length === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, filteredRows.length);
-
-  const visiblePages = Array.from({ length: totalPages }, (_, index) => index + 1).slice(
-    Math.max(0, currentPage - 2),
-    Math.max(0, currentPage - 2) + 3
+  const paginatedRows = filteredRows.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
   );
+  const pageStart =
+    filteredRows.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const pageEnd =
+    filteredRows.length === 0
+      ? 0
+      : Math.min(currentPage * PAGE_SIZE, filteredRows.length);
 
-  const handleFilterChange = (setter: (value: string) => void, value: string) => {
+  const visiblePages = Array.from(
+    { length: totalPages },
+    (_, index) => index + 1,
+  ).slice(Math.max(0, currentPage - 2), Math.max(0, currentPage - 2) + 3);
+
+  const handleFilterChange = (
+    setter: (value: string) => void,
+    value: string,
+  ) => {
     setter(value);
     setPage(1);
   };
 
   return (
-    <PageSkeletonGate skeleton={<ScreeningsPageSkeleton />}>
+    <PageSkeletonGate
+      skeleton={<ScreeningsPageSkeleton />}
+      isLoading={isAuthLoading || isPageLoading}
+    >
       <div className="page-container screenings-page">
-        <DashboardTopBar breadcrumbs={['Screenings']} />
+        <DashboardTopBar breadcrumbs={["Screenings"]} />
 
         <div className="screenings-metrics-grid">
           {metrics.map((metric) => (
@@ -126,19 +182,24 @@ export default function ScreeningsPage() {
         <section className="screenings-panel">
           <div className="screenings-toolbar">
             <div className="screenings-toolbar__intro">
-              <p className="screenings-eyebrow">Review center</p>
               <h1 className="screenings-heading">Screenings</h1>
             </div>
 
             <div className="screenings-toolbar__controls">
               <label className="screenings-search">
-                <Search size={18} className="screenings-search__icon" aria-hidden />
+                <Search
+                  size={18}
+                  className="screenings-search__icon"
+                  aria-hidden
+                />
                 <input
                   type="search"
                   className="screenings-search__input"
                   placeholder="Search by job or session"
                   value={query}
-                  onChange={(event) => handleFilterChange(setQuery, event.target.value)}
+                  onChange={(event) =>
+                    handleFilterChange(setQuery, event.target.value)
+                  }
                 />
               </label>
 
@@ -146,7 +207,9 @@ export default function ScreeningsPage() {
                 <select
                   className="screenings-select"
                   value={jobFilter}
-                  onChange={(event) => handleFilterChange(setJobFilter, event.target.value)}
+                  onChange={(event) =>
+                    handleFilterChange(setJobFilter, event.target.value)
+                  }
                 >
                   {jobOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -154,14 +217,20 @@ export default function ScreeningsPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={18} className="screenings-select-icon" aria-hidden />
+                <ChevronDown
+                  size={18}
+                  className="screenings-select-icon"
+                  aria-hidden
+                />
               </div>
 
               <div className="screenings-select-wrap">
                 <select
                   className="screenings-select"
                   value={statusFilter}
-                  onChange={(event) => handleFilterChange(setStatusFilter, event.target.value)}
+                  onChange={(event) =>
+                    handleFilterChange(setStatusFilter, event.target.value)
+                  }
                 >
                   {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -169,7 +238,11 @@ export default function ScreeningsPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={18} className="screenings-select-icon" aria-hidden />
+                <ChevronDown
+                  size={18}
+                  className="screenings-select-icon"
+                  aria-hidden
+                />
               </div>
             </div>
           </div>
@@ -188,74 +261,94 @@ export default function ScreeningsPage() {
             </div>
 
             <div className="screenings-table-body">
-              {!error ? paginatedRows.map((session) => {
-                const topScore = session.rankedResults[0]?.finalScore ?? 0;
-                const overrides = session.rankedResults.filter((result) => result.feedbackStatus === 'overridden').length;
-                const statusLabel = formatSessionStatus(session.status);
-                return (
-                  <article className="screenings-row" key={session._id}>
-                    <div className="screenings-row__session">
-                      <span
-                        className="screenings-session-label"
-                        title={session.name}
-                      >
-                        {session.name}
-                      </span>
-                      <span
-                        className="screenings-session-title"
-                        title={getJobTitle(session)}
-                      >
-                        {getJobTitle(session)}
-                      </span>
-                    </div>
-                    <div
-                      className="screenings-row__date"
-                      title={formatRelativeDate(session.createdAt)}
-                    >
-                      {formatRelativeDate(session.createdAt)}
-                    </div>
-                    <div className="screenings-row__number">{session.candidateIds.length}</div>
-                    <div className="screenings-row__score">
-                      <span className={`screenings-score-pill screenings-score-pill--${topScore >= 80 ? 'green' : topScore >= 50 ? 'orange' : 'blue'}`}>
-                        {topScore}%
-                      </span>
-                    </div>
-                    <div className={`screenings-row__number ${overrides > 0 ? 'is-warning' : ''}`}>{overrides}</div>
-                    <div className="screenings-row__status">
-                      <span
-                        className={`screenings-status screenings-status--${session.status.toLowerCase()}`}
-                        title={statusLabel}
-                      >
-                        {statusLabel}
-                      </span>
-                    </div>
-                    <div className="screenings-row__action">
-                      {session.status === 'processing' ? (
-                        <button type="button" className="screenings-action-btn screenings-action-btn--secondary" disabled>
-                          Running
-                        </button>
-                      ) : (
-                        <Link href={`/dashboard/jobs/${getJobId(session)}/session/${session._id}`} className="screenings-action-btn">
-                          View results
-                        </Link>
-                      )}
-                    </div>
-                  </article>
-                );
-              }) : null}
+              {!error
+                ? paginatedRows.map((session) => {
+                    const topScore = session.rankedResults[0]?.finalScore ?? 0;
+                    const overrides = session.rankedResults.filter(
+                      (result) => result.feedbackStatus === "overridden",
+                    ).length;
+                    const statusLabel = formatSessionStatus(session.status);
+                    return (
+                      <article className="screenings-row" key={session._id}>
+                        <div className="screenings-row__session">
+                          <span
+                            className="screenings-session-label"
+                            title={session.name}
+                          >
+                            {session.name}
+                          </span>
+                          <span
+                            className="screenings-session-title"
+                            title={getJobTitle(session)}
+                          >
+                            {getJobTitle(session)}
+                          </span>
+                        </div>
+                        <div
+                          className="screenings-row__date"
+                          title={formatRelativeDate(session.createdAt)}
+                        >
+                          {formatRelativeDate(session.createdAt)}
+                        </div>
+                        <div className="screenings-row__number">
+                          {session.candidateIds.length}
+                        </div>
+                        <div className="screenings-row__score">
+                          <span
+                            className={`screenings-score-pill screenings-score-pill--${topScore >= 80 ? "green" : topScore >= 50 ? "orange" : "blue"}`}
+                          >
+                            {topScore}%
+                          </span>
+                        </div>
+                        <div
+                          className={`screenings-row__number ${overrides > 0 ? "is-warning" : ""}`}
+                        >
+                          {overrides}
+                        </div>
+                        <div className="screenings-row__status">
+                          <span
+                            className={`screenings-status screenings-status--${session.status.toLowerCase()}`}
+                            title={statusLabel}
+                          >
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <div className="screenings-row__action">
+                          {session.status === "processing" ? (
+                            <button
+                              type="button"
+                              className="screenings-action-btn screenings-action-btn--secondary"
+                              disabled
+                            >
+                              Running
+                            </button>
+                          ) : (
+                            <Link
+                              href={`/dashboard/jobs/${getJobId(session)}/session/${session._id}`}
+                              className="screenings-action-btn"
+                            >
+                              View results
+                            </Link>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })
+                : null}
 
               {!error && paginatedRows.length === 0 ? (
                 <div className="screenings-empty">
                   {sessions.length === 0
-                    ? 'No screening sessions have been created yet.'
-                    : 'No screenings match your filters.'}
+                    ? "No screening sessions have been created yet."
+                    : "No screenings match your filters."}
                 </div>
               ) : null}
             </div>
 
             <div className="screenings-footer">
               <p className="screenings-footer__summary">
-                Showing {pageStart}-{pageEnd} sessions out of {filteredRows.length} sessions
+                Showing {pageStart}-{pageEnd} sessions out of{" "}
+                {filteredRows.length} sessions
               </p>
 
               <div className="screenings-pagination">
@@ -274,7 +367,7 @@ export default function ScreeningsPage() {
                     <button
                       type="button"
                       key={pageNumber}
-                      className={`screenings-pagination__page ${pageNumber === currentPage ? 'is-active' : ''}`}
+                      className={`screenings-pagination__page ${pageNumber === currentPage ? "is-active" : ""}`}
                       onClick={() => setPage(pageNumber)}
                     >
                       {pageNumber}
@@ -285,7 +378,9 @@ export default function ScreeningsPage() {
                 <button
                   type="button"
                   className="screenings-pagination__nav"
-                  onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                  onClick={() =>
+                    setPage((value) => Math.min(totalPages, value + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next
