@@ -5,6 +5,8 @@
   box-sizing: border-box;
   padding: 1rem;
   gap: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .login-card {
@@ -255,6 +257,8 @@
   .login-card,
   .login-branding {
     flex: initial;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .login-branding {

@@ -5,6 +5,8 @@
   box-sizing: border-box;
   padding: 1rem;
   gap: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .register-card {
@@ -253,6 +255,8 @@
   .register-card,
   .register-branding {
     flex: initial;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .register-branding {

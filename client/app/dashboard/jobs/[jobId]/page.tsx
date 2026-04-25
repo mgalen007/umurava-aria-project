@@ -475,6 +475,7 @@ export default function JobApplicantsPage({
 
             <div className="applicants-toolbar__controls">
               <button
+                id="tour-upload-pdf-btn"
                 className="applicants-action-btn applicants-action-btn--ghost"
                 type="button"
                 onClick={() => pdfInputRef.current?.click()}
@@ -495,6 +496,7 @@ export default function JobApplicantsPage({
               </button>
 
               <button
+                id="tour-scan-btn"
                 className="applicants-action-btn applicants-action-btn--secondary"
                 type="button"
                 onClick={handleScreenSelected}
@@ -505,6 +507,7 @@ export default function JobApplicantsPage({
               </button>
 
               <button
+                id="tour-results-section"
                 className="applicants-action-btn applicants-action-btn--primary"
                 type="button"
                 onClick={() => setIsSessionsOpen(true)}
@@ -632,12 +635,20 @@ export default function JobApplicantsPage({
               </div>
             ) : null}
 
-            <div className="applicants-table-meta">
-              <span>
-                Showing {filteredApplicants.length} of {allCandidates.length}{" "}
-                candidate{allCandidates.length === 1 ? "" : "s"}
-              </span>
-              <span>{selectedCount} selected</span>
+            <div className="applicants-table-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span>
+                  Showing {filteredApplicants.length} of {allCandidates.length}{" "}
+                  candidate{allCandidates.length === 1 ? "" : "s"}
+                </span>
+                <span style={{ marginLeft: '1rem' }}>{selectedCount} selected</span>
+              </div>
+              
+              {hasApplicants && sessions.length === 0 ? (
+                <div style={{ backgroundColor: '#f9f5ff', color: '#6941c6', padding: '0.5rem 1rem', borderRadius: '16px', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  Step 2: Check the boxes below and click "Scan selected" above
+                </div>
+              ) : null}
             </div>
 
             <div className="table-container applicants-table-container">
@@ -646,6 +657,7 @@ export default function JobApplicantsPage({
                   <tr>
                     <th className="applicants-table__checkbox-col">
                       <input
+                        id="tour-select-all-candidates"
                         type="checkbox"
                         checked={allVisibleSelected}
                         onChange={toggleSelectAllVisible}
@@ -711,8 +723,19 @@ export default function JobApplicantsPage({
                   {!hasApplicants ? (
                     <tr>
                       <td colSpan={6}>
-                        <div className="applicants-empty">
-                          No candidates have been imported yet.
+                        <div className="applicants-empty" style={{ padding: '4rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                          <h3 style={{ fontSize: '1.25rem', color: '#101828', margin: 0 }}>Step 1: Add Candidates</h3>
+                          <p style={{ color: '#475467', maxWidth: '400px', textAlign: 'center', margin: 0 }}>
+                            Use the <strong>Upload PDFs</strong> or <strong>Import CSV</strong> buttons above to add candidate resumes to this workspace.
+                          </p>
+                          <button
+                            className="btn btn-primary"
+                            type="button"
+                            onClick={() => pdfInputRef.current?.click()}
+                            style={{ marginTop: '1rem' }}
+                          >
+                            Upload PDFs now
+                          </button>
                         </div>
                       </td>
                     </tr>

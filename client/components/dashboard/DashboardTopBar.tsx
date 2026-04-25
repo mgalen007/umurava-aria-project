@@ -61,7 +61,7 @@ export function DashboardTopBar({
         ) : null}
 
         {showCreateJobButton ? (
-          <Link href="/dashboard/jobs/new" className={`btn btn-primary ${styles.createJobButton}`}>
+          <Link id="tour-create-job-btn" href="/dashboard/jobs/new" className={`btn btn-primary ${styles.createJobButton}`}>
             Create new job
           </Link>
         ) : null}

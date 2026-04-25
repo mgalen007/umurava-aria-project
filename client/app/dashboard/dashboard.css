@@ -24,6 +24,30 @@
 
 .sidebar.collapsed {
   width: 80px;
+  overflow: visible; /* Allow floating tooltips to escape the sidebar */
+}
+
+/* Floating Tooltips when collapsed */
+.sidebar.collapsed .nav-item {
+  position: relative;
+}
+
+.sidebar.collapsed .nav-item:hover .nav-label {
+  max-width: none;
+  opacity: 1;
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--surface-dark);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-inverse);
+  white-space: nowrap;
 }
 
 /* Labels clip away; icons stay in a fixed rail (see .nav-icon) */
@@ -33,6 +57,7 @@
   margin: 0;
   padding: 0;
   pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .sidebar.collapsed .admin-info {
@@ -168,8 +193,8 @@
   min-height: 32px;
 }
 
-/* Logo mark stays in one place; sidebar width animates around it */
 .logo-slot {
+  position: relative;
   margin-left: 7px;
   width: 32px;
   height: 32px;
@@ -180,6 +205,41 @@
   overflow: hidden;
 }
 
+.hover-expand-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-inverse);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.collapse-icon {
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: var(--radius-button);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.org-profile-toggle:hover .collapse-icon {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-inverse);
+}
+
+.sidebar.collapsed .org-profile-toggle:hover .logo-slot-img {
+  opacity: 0;
+}
+
+.sidebar.collapsed .org-profile-toggle:hover .hover-expand-icon {
+  opacity: 1;
+}
+
 .logo-slot-img {
   height: 32px;
   width: auto;
@@ -187,6 +247,7 @@
   display: block;
   object-fit: contain;
   object-position: left center;
+  transition: opacity 0.2s ease;
 }
 
 .org-info,
