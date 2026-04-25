@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   DashboardCharts,
   type ApplicationVolumePoint,
@@ -23,6 +24,7 @@ import {
   getJobTitle,
 } from "@/lib/helpers";
 import type { Job, Session } from "@/lib/types";
+import { CheckCircle2, Circle } from "lucide-react";
 import "./dashboard-page.css";
 
 function buildOverviewRows(
@@ -147,7 +149,6 @@ export default function DashboardPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
 
   useEffect(() => {
@@ -167,14 +168,7 @@ export default function DashboardPage() {
         setJobs(jobsResult);
         setSessions(sessionsResult);
         setError(null);
-        // Check if first time
-        if (
-          jobsResult.length === 0 &&
-          sessionsResult.length === 0 &&
-          !localStorage.getItem("aria_onboarded")
-        ) {
-          setShowOnboarding(true);
-        }
+        // We removed the automatic tour trigger based on user request.
       })
       .catch((err) => {
         if (!isActive) return;
@@ -217,9 +211,40 @@ export default function DashboardPage() {
         />
         {error ? <p role="alert">{error}</p> : null}
         {!error && !isPageLoading && jobs.length === 0 && sessions.length === 0 ? (
-          <div className="screenings-empty">
-            Welcome to ARIA! Your workspace is ready. Start by creating your
-            first job to begin screening candidates with AI-powered insights.
+          <div className="screenings-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', padding: '4rem 2rem', backgroundColor: '#f9f9fb', borderRadius: '12px', border: '1px dashed #d0d5dd', marginTop: '2rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#101828' }}>Welcome to ARIA!</h2>
+            <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem', color: '#475467', textAlign: 'center' }}>
+              Your AI-powered candidate screening workspace is ready. Step 1 is to create your first job position.
+            </p>
+            <Link 
+              href="/dashboard/jobs/new"
+              className="btn btn-primary" 
+              style={{ padding: '0.75rem 2rem', fontSize: '1rem', fontWeight: 'bold', marginTop: '1rem' }}
+            >
+              Create your first job
+            </Link>
+          </div>
+        ) : null}
+
+        {!error && !isPageLoading && jobs.length > 0 && sessions.length === 0 ? (
+          <div className="getting-started-panel" style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '1.5rem', border: '1px solid #eaecf0', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 1px 3px rgba(16, 24, 40, 0.05)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: '#101828', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Getting Started Checklist
+            </h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#027a48' }}>
+                <CheckCircle2 size={20} />
+                <span style={{ textDecoration: 'line-through', opacity: 0.8 }}>Create your first job position</span>
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#101828', fontWeight: 500 }}>
+                <Circle size={20} color="#7268ef" />
+                <span>Upload candidates to your job workspace</span>
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#667085' }}>
+                <Circle size={20} />
+                <span>Run an AI screening session</span>
+              </li>
+            </ul>
           </div>
         ) : null}
         {!error ? <DashboardOverviewSection rows={overviewRows} /> : null}
@@ -229,35 +254,6 @@ export default function DashboardPage() {
             shortlistByRole={shortlistByRole}
           />
         ) : null}
-        {showOnboarding && (
-          <div
-            className="onboarding-modal-overlay"
-            onClick={() => setShowOnboarding(false)}
-          >
-            <div
-              className="onboarding-modal"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2>Welcome to ARIA!</h2>
-              <p>Get started with these quick steps:</p>
-              <ol>
-                <li>Create your first job posting</li>
-                <li>Upload candidate resumes</li>
-                <li>Run an AI-powered screening session</li>
-                <li>Review top matches and insights</li>
-              </ol>
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  setShowOnboarding(false);
-                  localStorage.setItem("aria_onboarded", "true");
-                }}
-              >
-                Get Started
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </PageSkeletonGate>
   );

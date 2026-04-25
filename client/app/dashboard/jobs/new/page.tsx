@@ -2,6 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
 import { PageSkeletonGate } from '@/components/skeletons/PageSkeletonGate';
 import { CreateJobPageSkeleton } from '@/components/skeletons/PageSkeletons';
 import { ApiError, api } from '@/lib/api';
@@ -255,6 +256,16 @@ export default function CreateJobPage() {
   return (
     <PageSkeletonGate skeleton={<CreateJobPageSkeleton />}>
       <div className="page-container flex-col" style={{ alignItems: 'center', paddingTop: '2rem' }}>
+        <div style={{ width: '100%', maxWidth: '800px', marginBottom: '1rem', display: 'flex' }}>
+          <button 
+            type="button" 
+            onClick={() => router.back()} 
+            className="btn btn-secondary" 
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid #d0d5dd', background: '#fff', color: '#344054', fontWeight: 600 }}
+          >
+            <ChevronLeft size={16} /> Back
+          </button>
+        </div>
         <div className="create-job-card surface">
           <h2 className="text-h2" style={{ textAlign: 'center', marginBottom: '2rem' }}>
             Create Job
@@ -481,7 +492,7 @@ export default function CreateJobPage() {
               <button type="button" className="btn btn-secondary" onClick={handleSaveDraft}>
                 Save as draft
               </button>
-              <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              <button id="tour-save-job-btn" type="submit" className="btn btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Creating...' : 'Create new job'}
               </button>
             </div>

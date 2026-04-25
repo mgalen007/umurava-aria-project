@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
 import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
 import { JobsPageSkeleton } from "@/components/skeletons/PageSkeletons";
@@ -16,7 +16,8 @@ export default function JobsPage() {
   const { token, isLoading: isAuthLoading } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"status" | "date">("status");
+  const [sortBy, setSortBy] = useState<"status" | "date">("date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [isPageLoading, setIsPageLoading] = useState(true);
 
   useEffect(() => {
@@ -59,13 +60,30 @@ export default function JobsPage() {
     const next = [...jobs];
     if (sortBy === "status") {
       const order = { active: 0, draft: 1, closed: 2 };
-      next.sort((a, b) => order[a.status] - order[b.status]);
+      next.sort((a, b) => {
+        const valA = order[a.status] ?? 3;
+        const valB = order[b.status] ?? 3;
+        return sortDirection === "asc" ? valA - valB : valB - valA;
+      });
       return next;
     }
 
-    next.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    next.sort((a, b) => {
+      const valA = +new Date(a.createdAt);
+      const valB = +new Date(b.createdAt);
+      return sortDirection === "asc" ? valA - valB : valB - valA;
+    });
     return next;
-  }, [jobs, sortBy]);
+  }, [jobs, sortBy, sortDirection]);
+
+  const handleSort = (field: "status" | "date") => {
+    if (sortBy === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortDirection("desc"); // Default to desc when switching fields
+    }
+  };
 
   return (
     <PageSkeletonGate
@@ -82,23 +100,23 @@ export default function JobsPage() {
             <div className="jobs-toolbar__controls">
               <div className="jobs-sort-group">
                 <button
-                  className="jobs-sort-btn jobs-sort-btn--primary"
+                  className={`jobs-sort-btn ${sortBy === "status" ? "jobs-sort-btn--primary" : ""}`}
                   type="button"
-                  onClick={() => setSortBy("status")}
+                  onClick={() => handleSort("status")}
                 >
-                  Sort by Status <ArrowDown size={14} />
+                  Sort by Status {sortBy === "status" ? (sortDirection === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />) : <ArrowDown size={14} />}
                 </button>
                 <button
-                  className="jobs-sort-btn"
+                  className={`jobs-sort-btn ${sortBy === "date" ? "jobs-sort-btn--primary" : ""}`}
                   type="button"
-                  onClick={() => setSortBy("date")}
+                  onClick={() => handleSort("date")}
                 >
-                  Sort by Date <ArrowDown size={14} />
+                  Sort by Date {sortBy === "date" ? (sortDirection === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />) : <ArrowDown size={14} />}
                 </button>
               </div>
 
               <Link href="/dashboard/jobs/new" className="jobs-create-btn">
-                Create new job
+                <Plus size={16} /> Create new job
               </Link>
             </div>
           </div>
@@ -150,7 +168,7 @@ export default function JobsPage() {
                         href={`/dashboard/jobs/${job._id}`}
                         className="link-btn"
                       >
-                        View job <ArrowRight size={16} />
+                        View job
                       </Link>
                     </div>
                   </article>

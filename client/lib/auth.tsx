@@ -53,6 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bootstrappedToken = null;
     bootstrappedUserPromise = null;
     window.localStorage.removeItem(AUTH_TOKEN_KEY);
+    window.localStorage.removeItem('aria_onboarded');
+    window.localStorage.removeItem('aria_tour_running');
+    window.localStorage.removeItem('aria_tour_step');
     setToken(null);
     setUser(null);
   }

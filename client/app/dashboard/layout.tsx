@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Home, Briefcase, ClipboardList, Settings, LogOut, Users } from 'lucide-react';
+import { Menu, X, Home, Briefcase, ClipboardList, Settings, LogOut, Users, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import './dashboard.css';
 
@@ -98,13 +98,23 @@ export default function DashboardLayout({
           <div
             className="org-profile org-profile-toggle"
             onClick={toggleCollapse}
-            style={{ backgroundColor: 'transparent', padding: 0, marginBottom: '2rem', cursor: 'pointer' }}
+            style={{ backgroundColor: 'transparent', padding: '0.5rem', marginBottom: '2rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <div className="org-profile-brand">
               <div className="logo-slot">
                 <img src="/image/logo-white.png" alt="ARIA Logo" className="logo-slot-img" />
+                <div className="hover-expand-icon">
+                  <PanelLeftOpen size={20} />
+                </div>
               </div>
             </div>
+            
+            {!isCollapsed && (
+              <div className="collapse-icon">
+                <PanelLeftClose size={20} />
+              </div>
+            )}
           </div>
 
           <nav className="sidebar-nav">
@@ -176,7 +186,9 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      <main className="main-content">{children}</main>
+      <main className="main-content">
+        {children}
+      </main>
     </div>
   );
 }
