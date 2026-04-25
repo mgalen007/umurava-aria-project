@@ -21,7 +21,7 @@ export interface Notification {
   createdAt: string;
 }
 
-const DEFAULT_API_BASE_URL = 'http://localhost:4000/api';
+const DEFAULT_API_BASE_URL = 'https://aria-backend-orgl.onrender.com';
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(/\/$/, '');
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
