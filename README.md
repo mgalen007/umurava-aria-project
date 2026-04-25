@@ -5,7 +5,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.4-black)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green)
 
-**ARIA** (Automated Recruitment Intelligence Assistant) is a modern, AI-powered recruitment platform designed to streamline the hiring process. It leverages Google's Gemini AI to enhance candidate screening, job matching, and recruitment workflows.
+**ARIA** (AI Recruitment Intelligence Analyst) is a modern, AI-powered recruitment platform designed to streamline the hiring process. It leverages Google's Gemini AI to enhance candidate screening, job matching, and recruitment workflows.
 
 **Live Demo:** [https://umurava-aria-project.vercel.app](https://umurava-aria-project.vercel.app)
 
@@ -325,7 +325,9 @@ This project is licensed under the ISC License - see the LICENSE file for detail
 
 - **Chaste** (@chaste-ganza) - Project Lead
 - **SanoAngella** (@SanoAngella) - Frontend Developer
-- **RUGWIRO Mike Galen** (@mgalen007) - Backend Developer
+- **RUGWIRO Mike Galen** (@mgalen007) - AI Engineer
+- **ISINGIZWE KWIZERA Blaise** (@blaisekwizera31-hash) - System Designer
+- **Bonte** (@Bonte4) - Backend Developer  
 
 ## 🙏 Acknowledgments
 
