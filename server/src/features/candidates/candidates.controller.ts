@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { CandidatesService } from './candidates.service';
+import fs from 'fs/promises';
 
 type IdParam = { id: string }
 
@@ -46,6 +47,19 @@ export class CandidatesController {
     try {
       await this.service.remove(req.params.id, req.user!.id);
       res.json({ success: true, message: 'Candidate deleted' });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  document = async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+    try {
+      const { candidate, document, filePath } = await this.service.getDocument(req.params.id, req.user!.id);
+      await fs.access(filePath);
+      res.setHeader('Content-Type', document.mimeType);
+      res.setHeader('Content-Disposition', `inline; filename="${document.originalName}"`);
+      res.setHeader('Cache-Control', 'private, max-age=60');
+      res.sendFile(filePath);
     } catch (err) {
       next(err);
     }

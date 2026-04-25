@@ -82,7 +82,7 @@ export class AuthService {
     };
   }
 
-  private serializeUser(user: IUser) {
+  serializeUser(user: IUser) {
     return {
       id: user._id.toString(),
       firstName: user.firstName,
@@ -90,6 +90,8 @@ export class AuthService {
       name: `${user.firstName} ${user.lastName}`.trim(),
       username: user.username,
       email: user.email,
+      jobTitle: user.jobTitle,
+      profilePhotoUrl: user.profilePhotoUrl,
       role: user.role,
       isActive: user.isActive,
       createdAt: user.createdAt,

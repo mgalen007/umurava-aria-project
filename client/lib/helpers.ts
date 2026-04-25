@@ -1,5 +1,8 @@
 import type { Candidate, CandidateExperience, CandidateSkill, Job, JobStatus, Session, SessionCandidate, SessionStatus } from './types';
 
+const DEFAULT_API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(/\/$/, '');
+
 export function getCandidateName(candidate: Pick<Candidate | SessionCandidate, 'firstName' | 'lastName'>) {
   return `${candidate.firstName} ${candidate.lastName}`.trim();
 }
@@ -101,10 +104,17 @@ export function formatRelativeDate(value: string) {
 
 export function buildCandidateCvUrl(
   candidate: Pick<Candidate | SessionCandidate, 'firstName' | 'lastName' | 'email' | 'headline' | 'location'> & {
+    _id?: string;
     bio?: string;
     skills?: CandidateSkill[];
-  }
+    sourceDocument?: { originalName: string };
+  },
+  token?: string | null
 ) {
+  if (candidate._id && token && candidate.sourceDocument) {
+    return `${API_BASE_URL}/candidates/${candidate._id}/document?token=${encodeURIComponent(token)}`;
+  }
+
   const content = [
     `${getCandidateName(candidate)} CV`,
     `Email: ${candidate.email}`,

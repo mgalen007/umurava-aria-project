@@ -103,6 +103,18 @@ const EvaluationHistorySchema = new Schema(
   { _id: false }
 );
 
+const CandidateSourceDocumentSchema = new Schema(
+  {
+    originalName: { type: String, required: true },
+    storedName: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    extension: { type: String, required: true },
+    path: { type: String, required: true },
+    size: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
 const CandidateSchema = new Schema<ICandidate>(
   {
     source: {
@@ -127,6 +139,7 @@ const CandidateSchema = new Schema<ICandidate>(
     extractionConfidence: { type: Number, min: 0, max: 1, default: 1 },
     extractionWarnings:   [{ type: String }],
     evaluationHistory:    { type: [EvaluationHistorySchema], default: [] },
+    sourceDocument:       { type: CandidateSourceDocumentSchema },
     globalStatus: {
       type:    String,
       enum:    ['available', 'interviewing', 'hired', 'rejected'],

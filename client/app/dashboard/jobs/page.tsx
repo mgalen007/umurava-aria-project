@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
 import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
 import { JobsPageSkeleton } from "@/components/skeletons/PageSkeletons";
@@ -19,6 +19,32 @@ export default function JobsPage() {
   const [sortBy, setSortBy] = useState<"status" | "date">("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
+
+  async function handleDeleteJob(job: Job) {
+    if (!token) return;
+
+    const confirmed = window.confirm(
+      `Delete "${job.title}"? This will also remove its screening sessions.`
+    );
+    if (!confirmed) return;
+
+    setDeletingJobId(job._id);
+    setError(null);
+
+    try {
+      await api.deleteJob(job._id, token);
+      setJobs((current) => current.filter((item) => item._id !== job._id));
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "We couldn't delete this job right now. Please try again.",
+      );
+    } finally {
+      setDeletingJobId(null);
+    }
+  }
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -170,6 +196,15 @@ export default function JobsPage() {
                       >
                         View job
                       </Link>
+                      <button
+                        type="button"
+                        className="link-btn link-btn--danger"
+                        onClick={() => handleDeleteJob(job)}
+                        disabled={deletingJobId === job._id}
+                      >
+                        <Trash2 size={14} />
+                        {deletingJobId === job._id ? "Deleting..." : "Delete"}
+                      </button>
                     </div>
                   </article>
                 ))

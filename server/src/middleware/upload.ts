@@ -1,8 +1,8 @@
 import multer from 'multer';
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import { AppError } from './error';
+import { getTemporaryUploadDir } from '../features/candidates/candidate-documents';
 
 const ALLOWED_TYPES = new Set([
   'application/pdf',
@@ -12,7 +12,7 @@ const ALLOWED_TYPES = new Set([
 ]);
 
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.csv', '.xls', '.xlsx']);
-const UPLOAD_DIR = path.join(os.tmpdir(), 'aria-uploads');
+const UPLOAD_DIR = getTemporaryUploadDir();
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 

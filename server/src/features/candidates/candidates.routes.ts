@@ -13,6 +13,7 @@ router.use(auth);
 router.post('/', validate(createCandidateDto), controller.create);
 router.get('/', controller.findAll);
 router.get('/search', controller.search);
+router.get('/:id/document', controller.document);
 router.get('/:id', controller.findOne);
 router.patch('/:id', validate(updateCandidateDto), controller.update);
 router.delete('/:id', controller.remove);

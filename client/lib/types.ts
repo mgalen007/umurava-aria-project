@@ -5,6 +5,8 @@ export type AuthUser = {
   name: string;
   username: string;
   email: string;
+  jobTitle: string;
+  profilePhotoUrl: string | null;
   role: "admin" | "recruiter";
   isActive: boolean;
   createdAt: string;
@@ -88,6 +90,15 @@ export type CandidateAvailability = {
   startDate?: string;
 };
 
+export type CandidateSourceDocument = {
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  extension: string;
+  path: string;
+  size: number;
+};
+
 export type Candidate = {
   _id: string;
   source: "pdf_resume" | "csv_upload" | "manual_entry" | "umurava_json";
@@ -108,6 +119,7 @@ export type Candidate = {
   extractionConfidence: number;
   extractionWarnings?: string[];
   globalStatus: "available" | "interviewing" | "hired" | "rejected";
+  sourceDocument?: CandidateSourceDocument;
   uploadedBy: string;
   createdAt: string;
   updatedAt: string;
@@ -122,6 +134,7 @@ export type SessionCandidate = {
   location: string;
   bio?: string;
   skills?: CandidateSkill[];
+  sourceDocument?: CandidateSourceDocument;
 };
 
 export type SessionJobRef = {
@@ -190,3 +203,60 @@ export type Session = {
 };
 
 export type FeedbackAction = "approved" | "overridden" | "disqualified";
+
+export type AiWeights = {
+  skills: number;
+  experience: number;
+  education: number;
+};
+
+export type ShortlistSize = "5" | "10" | "20" | "all";
+export type ScreeningMode = "umurava" | "external" | "both";
+export type ParsingFallbackBehavior = "blank" | "flag";
+
+export type ParsingFields = {
+  name: boolean;
+  email: boolean;
+  skills: boolean;
+  experience: boolean;
+  education: boolean;
+  location: boolean;
+  certifications: boolean;
+};
+
+export type SettingsProfile = {
+  fullName: string;
+  email: string;
+  jobTitle: string;
+  profilePhotoUrl: string | null;
+};
+
+export type AiSettings = {
+  defaultShortlistSize: ShortlistSize;
+  defaultScreeningMode: ScreeningMode;
+  weights: AiWeights;
+  showReasoning: boolean;
+};
+
+export type ParsingSettings = {
+  fields: ParsingFields;
+  fallbackBehavior: ParsingFallbackBehavior;
+};
+
+export type UserSettings = {
+  profile: SettingsProfile;
+  ai: AiSettings;
+  parsing: ParsingSettings;
+};
+
+export type UpdateProfilePayload = {
+  fullName: string;
+  jobTitle: string;
+  profilePhotoUrl?: string | null;
+};
+
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};

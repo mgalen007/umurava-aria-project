@@ -1,10 +1,12 @@
 import fs from 'fs/promises';
+import path from 'path';
 import { Candidate } from './candidates.model';
 import { CreateCandidateDto, IngestCandidateDto, UpdateCandidateDto } from './candidates.dto';
-import { ICandidate } from './candidates.types';
+import { CandidateSourceDocument, ICandidate } from './candidates.types';
 import { AppError } from '../../middleware/error';
 import { NormalizeService } from '../../ai/normalize.service'
 import { NotificationService } from '../notifications/notification.service';
+import { deleteStoredDocument, persistUploadedDocument } from './candidate-documents';
 
 const normalizeService = new NormalizeService()
 const notificationService = new NotificationService()
@@ -18,7 +20,8 @@ export class CandidatesService {
   private async createCandidate(
     data: CreateCandidateDto | IngestCandidateDto,
     uploadedBy: string,
-    source: 'manual_entry' | 'pdf_resume' | 'csv_upload'
+    source: 'manual_entry' | 'pdf_resume' | 'csv_upload',
+    sourceDocument?: CandidateSourceDocument
   ) {
     const normalizedData = this.normalizeCandidatePayload(data);
     const existing = await Candidate.findOne({
@@ -27,12 +30,16 @@ export class CandidatesService {
     });
 
     if (existing) {
+      if (sourceDocument) {
+        await this.replaceCandidateDocument(existing, sourceDocument);
+      }
       return existing;
     }
 
     const candidate = await Candidate.create({
       ...normalizedData,
       source,
+      ...(sourceDocument ? { sourceDocument } : {}),
       uploadedBy,
       extractionConfidence: 1,
     });
@@ -80,6 +87,21 @@ export class CandidatesService {
   async remove(id: string, uploadedBy: string) {
     const candidate = await Candidate.findOneAndDelete({ _id: id, uploadedBy });
     if (!candidate) throw new AppError('Candidate not found', 404);
+    await this.cleanupCandidateDocument(candidate);
+  }
+
+  async getDocument(id: string, uploadedBy: string) {
+    const candidate = await Candidate.findOne({ _id: id, uploadedBy }).select('sourceDocument firstName lastName');
+    if (!candidate) throw new AppError('Candidate not found', 404);
+    if (!candidate.sourceDocument?.path) {
+      throw new AppError('No uploaded document is available for this candidate', 404);
+    }
+
+    return {
+      candidate,
+      filePath: path.resolve(candidate.sourceDocument.path),
+      document: candidate.sourceDocument,
+    };
   }
 
   async search(query: string, uploadedBy: string) {
@@ -98,7 +120,8 @@ export class CandidatesService {
       try {
         const buffer = await fs.readFile(file.path);
         const data = await normalizeService.fromPDF(buffer);
-        const candidate = await this.createCandidate(data, uploadedBy, 'pdf_resume');
+        const sourceDocument = await persistUploadedDocument(file);
+        const candidate = await this.createCandidate(data, uploadedBy, 'pdf_resume', sourceDocument);
         succeeded.push(candidate);
       } catch (error) {
         failed.push(error instanceof Error ? error.message : 'Unknown error');
@@ -132,9 +155,10 @@ export class CandidatesService {
       const rows = file.mimetype === 'text/csv'
         ? await normalizeService.fromCSV(buffer)
         : await normalizeService.fromExcel(buffer);
+      const sourceDocument = await persistUploadedDocument(file);
 
       const results = await Promise.allSettled(
-        rows.map((data) => this.createCandidate(data, uploadedBy, 'csv_upload'))
+        rows.map((data) => this.createCandidate(data, uploadedBy, 'csv_upload', sourceDocument))
       );
 
       const succeeded = results
@@ -188,5 +212,29 @@ export class CandidatesService {
       ...data,
       email: data.email.trim().toLowerCase(),
     };
+  }
+
+  private async replaceCandidateDocument(candidate: ICandidate, nextDocument: CandidateSourceDocument) {
+    const previousPath = candidate.sourceDocument?.path;
+    candidate.sourceDocument = nextDocument;
+    await candidate.save();
+
+    const duplicateCount = previousPath
+      ? await Candidate.countDocuments({ _id: { $ne: candidate._id }, 'sourceDocument.path': previousPath })
+      : 0;
+
+    if (previousPath && duplicateCount === 0 && previousPath !== nextDocument.path) {
+      await deleteStoredDocument(previousPath);
+    }
+  }
+
+  private async cleanupCandidateDocument(candidate: ICandidate) {
+    const documentPath = candidate.sourceDocument?.path;
+    if (!documentPath) return;
+
+    const duplicateCount = await Candidate.countDocuments({ 'sourceDocument.path': documentPath });
+    if (duplicateCount === 0) {
+      await deleteStoredDocument(documentPath);
+    }
   }
 }

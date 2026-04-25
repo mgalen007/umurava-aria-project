@@ -15,7 +15,7 @@ export class SessionsService {
     // Return the same lightweight session shape the frontend expects after initial load.
     return (query as any)
       .populate('jobId', 'title experienceLevel location remote status')
-      .populate('candidateIds', 'firstName lastName email headline location');
+      .populate('candidateIds', 'firstName lastName email headline location sourceDocument');
   }
 
   private parseObjectId(value: string, label: string) {

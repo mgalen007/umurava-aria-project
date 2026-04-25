@@ -1,6 +1,8 @@
 import { Job } from './jobs.model';
 import { CreateJobDto, UpdateJobDto } from './jobs.dto';
 import { AppError } from '../../middleware/error';
+import { Session } from '../sessions/sessions.model';
+import { Notification } from '../notifications/notification.model';
 
 export class JobsService {
 
@@ -33,5 +35,9 @@ export class JobsService {
   async remove(id: string, createdBy: string) {
     const job = await Job.findOneAndDelete({ _id: id, createdBy });
     if (!job) throw new AppError('Job not found', 404);
+    await Promise.all([
+      Session.deleteMany({ jobId: job._id, createdBy }),
+      Notification.deleteMany({ user: createdBy, jobId: job._id }),
+    ]);
   }
 }

@@ -15,7 +15,24 @@ function stringToColor(str: string) {
   return `hsl(${Math.abs(hash) % 360}, 65%, 45%)`;
 }
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name, photoUrl }: { name: string; photoUrl?: string | null }) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={`${name} avatar`}
+        className="avatar-circle"
+        style={{
+          width: '32px',
+          height: '32px',
+          borderRadius: '50%',
+          objectFit: 'cover',
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className="avatar-circle"
@@ -155,7 +172,7 @@ export default function DashboardLayout({
 
         <div className="sidebar-bottom">
           <div className="admin-profile">
-            <Avatar name={user.name} />
+            <Avatar name={user.name} photoUrl={user.profilePhotoUrl} />
             <div className="admin-info">
               <span className="admin-name">{user.name}</span>
               <span className="admin-email">{user.email}</span>
