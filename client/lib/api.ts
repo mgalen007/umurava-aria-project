@@ -1,4 +1,16 @@
-import type { AuthResponse, AuthUser, Candidate, FeedbackAction, Job, Session } from './types';
+import type {
+  AiSettings,
+  AuthResponse,
+  AuthUser,
+  Candidate,
+  ChangePasswordPayload,
+  FeedbackAction,
+  Job,
+  ParsingSettings,
+  Session,
+  UpdateProfilePayload,
+  UserSettings,
+} from './types';
 
 export interface Notification {
   _id: string;
@@ -99,6 +111,49 @@ export const api = {
   me: (token: string) =>
     request<AuthUser>('/auth/me', { token }),
 
+  getSettings: (token: string) =>
+    request<UserSettings>('/settings', { token }),
+
+  updateProfile: (payload: UpdateProfilePayload, token: string) =>
+    request<{ user: AuthUser; profile: UserSettings['profile'] }>('/settings/profile', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+
+  changePassword: (payload: ChangePasswordPayload, token: string) =>
+    request<{ message: string }>('/settings/password', {
+      method: 'POST',
+      body: payload,
+      token,
+    }),
+
+  updateAiSettings: (payload: AiSettings, token: string) =>
+    request<AiSettings>('/settings/ai', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+
+  updateParsingSettings: (payload: ParsingSettings, token: string) =>
+    request<ParsingSettings>('/settings/parsing', {
+      method: 'PATCH',
+      body: payload,
+      token,
+    }),
+
+  clearSettingsData: (token: string) =>
+    request<{ deleted: Record<string, number> }>('/settings/data', {
+      method: 'DELETE',
+      token,
+    }),
+
+  deleteAccount: (token: string) =>
+    request<{ deleted: Record<string, number>; deletedAccount: boolean }>('/settings/account', {
+      method: 'DELETE',
+      token,
+    }),
+
   getJobs: (token: string) =>
     request<Job[]>('/jobs', { token }),
 
@@ -111,8 +166,14 @@ export const api = {
   updateJob: (jobId: string, payload: Record<string, unknown>, token: string) =>
     request<Job>(`/jobs/${jobId}`, { method: 'PATCH', body: payload, token }),
 
+  deleteJob: (jobId: string, token: string) =>
+    request<{ message: string }>(`/jobs/${jobId}`, { method: 'DELETE', token }),
+
   getCandidates: (token: string) =>
     request<Candidate[]>('/candidates', { token }),
+
+  deleteCandidate: (candidateId: string, token: string) =>
+    request<{ message: string }>(`/candidates/${candidateId}`, { method: 'DELETE', token }),
 
   searchCandidates: (query: string, token: string) =>
     request<Candidate[]>(`/candidates/search?q=${encodeURIComponent(query)}`, { token }),

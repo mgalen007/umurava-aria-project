@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { NotificationService } from './notification.service';
 
+type NotificationParams = {
+  id?: string;
+};
+
 export class NotificationController {
   private service = new NotificationService();
 
@@ -13,7 +17,7 @@ export class NotificationController {
     }
   };
 
-  markAsRead = async (req: Request, res: Response, next: NextFunction) => {
+  markAsRead = async (req: Request<NotificationParams>, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const data = await this.service.markAsRead(req.user!.id, id);

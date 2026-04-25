@@ -8,6 +8,7 @@ import jobsRouter from './features/jobs/jobs.routes'
 import candidatesRouter from './features/candidates/candidates.routes'
 import sessionsRouter from './features/sessions/sessions.routes'
 import notificationsRouter from './features/notifications/notification.routes'
+import settingsRouter from './features/settings/settings.routes'
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/jobs', jobsRouter)
 app.use('/api/candidates', candidatesRouter)
 app.use('/api/sessions', sessionsRouter)
 app.use('/api/notifications', notificationsRouter)
+app.use('/api/settings', settingsRouter)
 
 app.use(errorHandler)
 

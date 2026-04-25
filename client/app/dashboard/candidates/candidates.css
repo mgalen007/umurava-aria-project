@@ -335,6 +335,12 @@
   min-width: 82px;
 }
 
+.candidate-secondary-btn--danger {
+  border-color: #f3b6b2;
+  color: #b42318;
+  background: #fff5f4;
+}
+
 .candidates-empty {
   padding: 2rem 1rem;
   text-align: center;
@@ -503,6 +509,24 @@
 .drawer-cv-btn {
   width: 100%;
   margin-top: 1.3rem;
+}
+
+.drawer-delete-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-height: 42px;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #f3b6b2;
+  background: #fff5f4;
+  color: #b42318;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 @media (max-width: 960px) {

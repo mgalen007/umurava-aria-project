@@ -69,6 +69,15 @@ export interface EvaluationHistory {
   evaluatedAt: Date;
 }
 
+export interface CandidateSourceDocument {
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  extension: string;
+  path: string;
+  size: number;
+}
+
 export interface ICandidate extends Document {
   source:       'umurava_json' | 'pdf_resume' | 'csv_upload' | 'manual_entry';
   firstName:    string;
@@ -89,5 +98,6 @@ export interface ICandidate extends Document {
   extractionWarnings?:   string[];
   evaluationHistory:     EvaluationHistory[];
   globalStatus: 'available' | 'interviewing' | 'hired' | 'rejected';
+  sourceDocument?: CandidateSourceDocument;
   uploadedBy:   Types.ObjectId;
 }

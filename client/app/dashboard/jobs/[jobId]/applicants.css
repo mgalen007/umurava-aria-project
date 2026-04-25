@@ -386,6 +386,22 @@
   text-decoration: none;
 }
 
+.cv-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-height: 36px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #f3b6b2;
+  border-radius: 10px;
+  background: #fff5f4;
+  color: #b42318;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .applicants-empty,
 .sessions-empty {
   padding: 2rem 1rem;

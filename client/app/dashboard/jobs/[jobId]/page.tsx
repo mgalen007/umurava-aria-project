@@ -14,6 +14,7 @@ import {
   FileSearch,
   PanelRightOpen,
   Search,
+  Trash2,
   UploadCloud,
   X,
 } from "lucide-react";
@@ -39,6 +40,7 @@ export default function JobApplicantsPage({
   const routeParams = useParams<{ jobId: string }>();
   const jobId = typeof routeParams?.jobId === "string" ? routeParams.jobId : "";
   const { token } = useAuth();
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [job, setJob] = useState<Job | null>(null);
   const [allCandidates, setAllCandidates] = useState<Candidate[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -60,12 +62,13 @@ export default function JobApplicantsPage({
     null,
   );
   const [isUploading, setIsUploading] = useState(false);
+  const [deletingCandidateId, setDeletingCandidateId] = useState<string | null>(null);
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const csvInputRef = useRef<HTMLInputElement | null>(null);
-  const screeningProgressTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+  const screeningProgressTimerRef = useRef<number | null>(
     null,
   );
-  const screeningResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+  const screeningResetTimerRef = useRef<number | null>(
     null,
   );
   const isMountedRef = useRef(true);
@@ -98,8 +101,12 @@ export default function JobApplicantsPage({
   }, []);
 
   useEffect(() => {
-    if (!token || !jobId) return;
+    if (!token || !jobId) {
+      setIsPageLoading(true);
+      return;
+    }
     let isActive = true;
+    setIsPageLoading(true);
     setError(null);
 
     Promise.all([
@@ -125,6 +132,10 @@ export default function JobApplicantsPage({
             ? err.message
             : "Unable to load job workspace.",
         );
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsPageLoading(false);
       });
 
     return () => {
@@ -261,7 +272,7 @@ export default function JobApplicantsPage({
     setBannerFailures([]);
     clearScreeningProgressTimer();
     clearScreeningResetTimer();
-    screeningProgressTimerRef.current = setInterval(() => {
+    screeningProgressTimerRef.current = window.setInterval(() => {
       setScreeningProgress((current) => {
         if (current >= 94) {
           return current;
@@ -413,16 +424,38 @@ export default function JobApplicantsPage({
     }
   }
 
-  if (!job && !error) {
-    return (
-      <PageSkeletonGate skeleton={<ApplicantsPageSkeleton />}>
-        <div className="page-container applicants-page" />
-      </PageSkeletonGate>
+  async function handleDeleteCandidate(candidate: Candidate) {
+    if (!token) return;
+
+    const confirmed = window.confirm(
+      `Delete ${getCandidateName(candidate)} from your workspace?`
     );
+    if (!confirmed) return;
+
+    setDeletingCandidateId(candidate._id);
+    setError(null);
+    setBannerMessage(null);
+    setBannerFailures([]);
+
+    try {
+      await api.deleteCandidate(candidate._id, token);
+      setAllCandidates((current) => current.filter((item) => item._id !== candidate._id));
+      setSelectedIds((current) => current.filter((id) => id !== candidate._id));
+      setBannerMessage(`${getCandidateName(candidate)} was deleted from your workspace.`);
+    } catch (err) {
+      setBannerMessage(
+        err instanceof ApiError ? err.message : "Unable to delete this applicant.",
+      );
+    } finally {
+      setDeletingCandidateId(null);
+    }
   }
 
   return (
-    <PageSkeletonGate skeleton={<ApplicantsPageSkeleton />}>
+    <PageSkeletonGate
+      skeleton={<ApplicantsPageSkeleton />}
+      isLoading={isPageLoading || !token || !jobId}
+    >
       <div className="page-container applicants-page">
         <DashboardTopBar breadcrumbs={["Jobs", "Applicants"]} />
 
@@ -668,7 +701,7 @@ export default function JobApplicantsPage({
                     <th>Email address</th>
                     <th>Headline</th>
                     <th>Location</th>
-                    <th className="applicants-table__action-col">CV</th>
+                    <th className="applicants-table__action-col">Actions</th>
                   </tr>
                 </thead>
 
@@ -707,7 +740,7 @@ export default function JobApplicantsPage({
                         <td>{candidate.location}</td>
                         <td className="applicants-table__action-col">
                           <a
-                            href={buildCandidateCvUrl(candidate)}
+                            href={buildCandidateCvUrl(candidate, token)}
                             target="_blank"
                             rel="noreferrer"
                             className="cv-view-btn"
@@ -715,6 +748,15 @@ export default function JobApplicantsPage({
                             <Eye size={16} />
                             View
                           </a>
+                          <button
+                            type="button"
+                            className="cv-delete-btn"
+                            onClick={() => handleDeleteCandidate(candidate)}
+                            disabled={deletingCandidateId === candidate._id}
+                          >
+                            <Trash2 size={16} />
+                            {deletingCandidateId === candidate._id ? "Deleting..." : "Delete"}
+                          </button>
                         </td>
                       </tr>
                     );

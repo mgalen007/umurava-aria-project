@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, Search, X } from "lucide-react";
+import { Eye, Search, Trash2, X } from "lucide-react";
 import { DashboardTopBar } from "@/components/dashboard/DashboardTopBar";
 import { PageSkeletonGate } from "@/components/skeletons/PageSkeletonGate";
 import { CandidatesPageSkeleton } from "@/components/skeletons/PageSkeletons";
@@ -23,6 +23,7 @@ export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [deletingCandidateId, setDeletingCandidateId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -101,6 +102,34 @@ export default function CandidatesPage() {
       setSelected(nextSelected);
     }
   }, [candidates, selected]);
+
+  async function handleDeleteCandidate(candidate: Candidate) {
+    if (!token) return;
+
+    const confirmed = window.confirm(
+      `Delete ${getCandidateName(candidate)} from your workspace?`
+    );
+    if (!confirmed) return;
+
+    setDeletingCandidateId(candidate._id);
+    setError(null);
+
+    try {
+      await api.deleteCandidate(candidate._id, token);
+      setCandidates((current) => current.filter((item) => item._id !== candidate._id));
+      if (selected?._id === candidate._id) {
+        setSelected(null);
+      }
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "We couldn't delete this candidate right now. Please try again.",
+      );
+    } finally {
+      setDeletingCandidateId(null);
+    }
+  }
 
   return (
     <PageSkeletonGate
@@ -226,7 +255,7 @@ export default function CandidatesPage() {
                           <td className="candidates-table__action-col">
                             <div className="candidate-actions">
                               <a
-                                href={buildCandidateCvUrl(candidate)}
+                                href={buildCandidateCvUrl(candidate, token)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="candidate-secondary-btn"
@@ -234,6 +263,15 @@ export default function CandidatesPage() {
                                 <Eye size={15} />
                                 CV
                               </a>
+                              <button
+                                type="button"
+                                className="candidate-secondary-btn candidate-secondary-btn--danger"
+                                onClick={() => handleDeleteCandidate(candidate)}
+                                disabled={deletingCandidateId === candidate._id}
+                              >
+                                <Trash2 size={15} />
+                                {deletingCandidateId === candidate._id ? "Deleting..." : "Delete"}
+                              </button>
                               <button
                                 type="button"
                                 className="candidate-primary-btn"
@@ -342,7 +380,7 @@ export default function CandidatesPage() {
                 </div>
 
                 <a
-                  href={buildCandidateCvUrl(selected)}
+                  href={buildCandidateCvUrl(selected, token)}
                   target="_blank"
                   rel="noreferrer"
                   className="drawer-cv-btn"
@@ -350,6 +388,15 @@ export default function CandidatesPage() {
                   <Eye size={16} />
                   Open CV
                 </a>
+                <button
+                  type="button"
+                  className="drawer-delete-btn"
+                  onClick={() => handleDeleteCandidate(selected)}
+                  disabled={deletingCandidateId === selected._id}
+                >
+                  <Trash2 size={16} />
+                  {deletingCandidateId === selected._id ? "Deleting candidate..." : "Delete candidate"}
+                </button>
               </div>
             </>
           ) : null}

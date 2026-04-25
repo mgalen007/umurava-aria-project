@@ -22,6 +22,7 @@ type AuthContextValue = {
   login: (identifier: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  replaceUser: (user: AuthUser) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -130,6 +131,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(me);
   }
 
+  async function replaceUser(nextUser: AuthUser) {
+    if (!token) {
+      setUser(nextUser);
+      return;
+    }
+
+    bootstrappedToken = token;
+    bootstrappedUserPromise = Promise.resolve(nextUser);
+    setUser(nextUser);
+  }
+
   const value = useMemo<AuthContextValue>(() => ({
     user,
     token,
@@ -138,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     refreshUser,
+    replaceUser,
   }), [user, token, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
