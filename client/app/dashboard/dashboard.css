@@ -295,6 +295,7 @@
   background-color: rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.04);
   color: #c8ced9;
+  text-align: left;
 }
 
 .nav-item--logout:hover {

@@ -2,7 +2,7 @@
   width: 100%;
   max-width: 800px;
   padding: 3rem;
-  border: none;
+  border: var(--border-strong) 2px solid;
 }
 
 .create-job-form {
