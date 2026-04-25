@@ -5,8 +5,10 @@ import { Job } from '../jobs/jobs.model';
 import { CreateSessionDto, FeedbackDto } from './sessions.dto';
 import { AppError } from '../../middleware/error';
 import { AIService } from '../../ai/ai.service';
+import { NotificationService } from '../notifications/notification.service';
 
 const aiService = new AIService();
+const notificationService = new NotificationService();
 
 export class SessionsService {
   private populateSessionQuery<T>(query: T) {
@@ -99,7 +101,7 @@ export class SessionsService {
 
     if (!job) throw new AppError('Job not found', 404);
 
-    this.runInBackground(session.id, job, candidates);
+    this.runInBackground(session.id, job, candidates, createdBy);
 
     return { message: 'Screening started', sessionId: session.id };
   }
@@ -107,7 +109,8 @@ export class SessionsService {
   private async runInBackground(
     sessionId: string,
     job: any,
-    candidates: any[]
+    candidates: any[],
+    createdBy: string
   ) {
     const start = Date.now();
     try {
@@ -152,10 +155,24 @@ export class SessionsService {
           })
         )
       );
+
+      await notificationService.createNotification({
+        user: createdBy,
+        type: 'screening_completed',
+        message: `AI Screening for job "${job.title}" has completed. Evaluated ${result.rankings.length} candidates.`,
+        jobId: job._id.toString()
+      });
     } catch (err) {
       await Session.findByIdAndUpdate(sessionId, {
         status: 'failed',
         error:  String(err),
+      });
+
+      await notificationService.createNotification({
+        user: createdBy,
+        type: 'screening_completed',
+        message: `AI Screening for job "${job.title}" failed. Please try again.`,
+        jobId: job._id.toString()
       });
     }
   }

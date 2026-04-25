@@ -1,5 +1,14 @@
 import type { AuthResponse, AuthUser, Candidate, FeedbackAction, Job, Session } from './types';
 
+export interface Notification {
+  _id: string;
+  type: string;
+  message: string;
+  jobId?: string;
+  read: boolean;
+  createdAt: string;
+}
+
 const DEFAULT_API_BASE_URL = 'http://localhost:4000/api';
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(/\/$/, '');
 
@@ -153,4 +162,12 @@ export const api = {
       body: payload,
       token,
     }),
+
+  getNotifications: (token: string) =>
+    request<{ notifications: Notification[]; unreadCount: number }>('/notifications', { token }),
+
+  markNotificationsRead: (token: string, id?: string) => {
+    const endpoint = id ? `/notifications/${id}/read` : '/notifications/read';
+    return request<{ success: boolean }>(endpoint, { method: 'PUT', token });
+  },
 };

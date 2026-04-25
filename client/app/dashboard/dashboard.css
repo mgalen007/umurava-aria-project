@@ -73,7 +73,7 @@
 }
 
 .main-content {
-  --main-content-padding: 2.5rem;
+  --main-content-padding: 1.25rem;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -164,7 +164,7 @@
   }
 
   .main-content {
-    --main-content-padding: 1.25rem;
+    --main-content-padding: 1rem;
     margin: 0.75rem;
   }
 }
