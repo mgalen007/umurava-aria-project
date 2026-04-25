@@ -4,8 +4,10 @@ import { CreateCandidateDto, IngestCandidateDto, UpdateCandidateDto } from './ca
 import { ICandidate } from './candidates.types';
 import { AppError } from '../../middleware/error';
 import { NormalizeService } from '../../ai/normalize.service'
+import { NotificationService } from '../notifications/notification.service';
 
 const normalizeService = new NormalizeService()
+const notificationService = new NotificationService()
 
 export class CandidatesService {
 
@@ -105,6 +107,22 @@ export class CandidatesService {
       }
     }
 
+    if (succeeded.length > 0) {
+      await notificationService.createNotification({
+        user: uploadedBy,
+        type: 'applicants_added',
+        message: `Successfully imported ${succeeded.length} candidates from PDF resumes.`,
+      });
+    }
+
+    if (failed.length > 0) {
+      await notificationService.createNotification({
+        user: uploadedBy,
+        type: 'parsing_failed',
+        message: `Failed to parse ${failed.length} PDF resumes.`,
+      });
+    }
+
     return { succeeded, failed };
   }
 
@@ -126,6 +144,22 @@ export class CandidatesService {
       const failed = results
         .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
         .map((r) => r.reason?.message ?? 'Unknown error');
+
+      if (succeeded.length > 0) {
+        await notificationService.createNotification({
+          user: uploadedBy,
+          type: 'applicants_added',
+          message: `Successfully imported ${succeeded.length} candidates from CSV/Excel.`,
+        });
+      }
+
+      if (failed.length > 0) {
+        await notificationService.createNotification({
+          user: uploadedBy,
+          type: 'parsing_failed',
+          message: `Failed to parse ${failed.length} rows from CSV/Excel.`,
+        });
+      }
 
       return { succeeded, failed };
     } finally {

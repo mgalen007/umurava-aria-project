@@ -100,10 +100,10 @@
   background-color: var(--surface-default);
   border-bottom: 1px solid var(--border-subtle);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-  margin-top: calc(-1 * var(--main-content-padding, 2rem));
-  margin-right: calc(-1 * var(--main-content-padding, 2rem));
+  margin-top: calc(-1 * var(--main-content-padding, 1.25rem));
+  margin-right: calc(-1 * var(--main-content-padding, 1.25rem));
   margin-bottom: 0.5rem;
-  margin-left: calc(-1 * var(--main-content-padding, 2rem));
+  margin-left: calc(-1 * var(--main-content-padding, 1.25rem));
   padding: 0.6rem 1.5rem;
 }
 
